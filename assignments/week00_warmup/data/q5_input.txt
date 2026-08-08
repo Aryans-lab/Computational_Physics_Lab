@@ -1,0 +1,6 @@
+# Input values for Question 5
+# Format: real1 imag1 real2 imag2
+# c1 = real1 + imag1*j
+# c2 = real2 + imag2*j
+1.3  -2.2
+-0.8  1.7

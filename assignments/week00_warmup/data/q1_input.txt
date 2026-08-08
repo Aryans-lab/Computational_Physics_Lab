@@ -1,0 +1,5 @@
+# Input parameters for Question 1
+# Format: n_even  n_factorial
+# n_even      : compute sum of first n_even even numbers
+# n_factorial : compute factorial of n_factorial
+20  8

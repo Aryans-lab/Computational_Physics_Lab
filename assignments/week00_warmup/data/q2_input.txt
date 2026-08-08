@@ -1,0 +1,10 @@
+# Input parameters for Question 2
+# Format (one value per line, with label):
+# N   : number of terms to sum
+# t0  : first term (shared by GP and HP)
+# r   : common ratio (GP)
+# d   : common difference of underlying AP (HP)
+15
+1.25
+0.5
+1.5
