@@ -1,0 +1,2 @@
+Sum of first 20 even numbers: 420
+Factorial of 8             : 40320

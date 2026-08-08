@@ -1,0 +1,14 @@
+Matrix AB:
+  [ -0.300000,  -3.500000,   5.200000]
+  [ -4.500000,  -2.000000,   4.500000]
+  [  9.300000,   0.800000,  -7.000000]
+
+Matrix BC:
+  [  1.000000]
+  [ -5.750000]
+  [ -9.000000]
+
+Dot product D.C = -3.5
+
+# Note: AB[0][0] may show a ~1e-16 floating-point artefact
+# (IEEE 754 double-precision rounding), which is not a coding error.

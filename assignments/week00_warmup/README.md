@@ -2,47 +2,54 @@
 
 ## Problem Set
 
-This warmup covers Python fundamentals needed throughout the course.
-All solutions follow the course programming conventions (file I/O, library
-separation, no NumPy for core algorithms).
+This warmup covers Python fundamentals required throughout the course.
+All solutions strictly follow the course programming conventions:
+- Parameters/inputs read from **external files** via `sys.argv` (Rules 2 & 6)
+- All output written to **separate output files** (Rule 3)
+- Functions isolated in their own scripts (warmup only; from Week 01 onwards all routines go into `mylib.py`)
+- No NumPy/SciPy for core computation (Rule 8)
 
 ---
 
 ### Q1 – Loops & Arithmetic (`question1.py`)
 
-**Problem:** Compute the sum of the first 20 even numbers and the factorial
-of 8 using an explicit `for` loop.  
-**Restriction:** No `math.factorial` or `sum()` for the computation itself.
+**Problem:** Compute the sum of the first N even numbers and the factorial of M,
+where N and M are read from `data/q1_input.txt`.
+
+**Input** (`data/q1_input.txt`): `20  8`
 
 | Quantity | Result |
 |---|---|
 | Sum of first 20 even numbers | 420 |
 | 8! | 40 320 |
 
+**Output file:** `output/q1_output.txt`
+
 ---
 
 ### Q2 – Series Sums: GP & HP (`question2.py`)
 
-**Problem:** Sum N = 15 terms of:
-- A **Geometric Progression** with first term t₀ = 1.25 and ratio r = 0.5
-- A **Harmonic Progression** with underlying AP: first term t₀ = 1.25, common difference d = 1.5
+**Problem:** Sum N terms of a GP and a HP.  
+Parameters are read from `data/q2_input.txt`.  
+Closed-form formulae are **not** used; terms are accumulated iteratively.
 
-**Restriction:** Closed-form formulae are **not** allowed; terms must be accumulated iteratively.
+**Input** (`data/q2_input.txt`):  N=15, t₀=1.25, r=0.5, d=1.5
 
 | Series | Sum |
 |---|---|
 | GP (15 terms) | 2.4999237… |
 | HP (15 terms) | 2.4139570… |
 
-> **Analysis:** The GP sum converges to t₀/(1−r) = 1.25/0.5 = **2.5** as N→∞.
-> With 15 terms, the truncation error is approximately 7.6 × 10⁻⁵.
+> **Analysis:** The GP sum converges to t₀/(1−r) = **2.5** as N→∞.
+> With 15 terms the truncation error is ≈77.6 × 10⁻⁶.
+
+**Output file:** `output/q2_output.txt`
 
 ---
 
 ### Q3 – Matrix & Vector Operations from Files (`question3.py`)
 
-**Problem:** Read matrices **A** (3×3), **B** (3×3) and column vectors **C**, **D** (3×1)
-from ASCII data files in `data/`. Compute **AB**, **BC**, and **D·C**.
+**Problem:** Read matrices A, B and vectors C, D from `data/`. Compute AB, BC, D·C.
 
 **Input data:**
 ```
@@ -55,7 +62,7 @@ C = [-2.0,  0.5,  1.5]^T
 D = [ 1.0,  0.0, -1.0]^T
 ```
 
-**Output** (see `output/question3_output.txt` for the exact file):
+**Output** (`output/q3_output.txt`):
 ```
 Matrix AB:
   [ -0.300000,  -3.500000,   5.200000]
@@ -70,8 +77,7 @@ Matrix BC:
 Dot product D.C = -3.5
 ```
 
-> **Floating-point note:** The (0,0) entry of **AB** has a residual ~10⁻¹⁶ error.
-> This is a standard IEEE 754 artefact, not a coding bug.
+> **Floating-point note:** AB[0][0] has a residual ~10⁻¹⁶ error -- standard IEEE 754 artefact.
 
 ---
 
@@ -81,24 +87,23 @@ Dot product D.C = -3.5
 
 ### Q5 – Custom Complex Number Class (`question5.py`)
 
-**Problem:** Implement `MyComplex` class supporting addition, subtraction,
-multiplication, and modulus for c₁ = (1.3 − 2.2j) and c₂ = (−0.8 + 1.7j).
+**Problem:** Implement `MyComplex` class; compute operations for c₁ and c₂ read from file.
+
+**Input** (`data/q5_input.txt`): `1.3  -2.2` and `-0.8  1.7`
 
 | Operation | Result |
 |---|---|
 | c₁ + c₂ | 0.5 − 0.5j |
 | c₁ − c₂ | 2.1 − 3.9j |
 | c₁ × c₂ | 2.7 + 3.97j |
-| \|c₁\| | 2.5554 |
-| \|c₂\| | 1.8788 |
+| \|c₁\| | 2.5553864678 |
+| \|c₂\| | 1.8788294228 |
 
-> **Design note:** The class uses Python dunder methods (`__add__`, `__sub__`,
-> `__mul__`) for natural operator syntax (`c1 + c2`), which is cleaner
-> than the original `c1.add_complex(c1, c2)` pattern.
+**Output file:** `output/q5_output.txt`
 
 ---
 
-## Files in This Directory
+## Directory Layout
 
 ```
 week00_warmup/
@@ -108,20 +113,36 @@ week00_warmup/
 ├── question3.py
 ├── question5.py
 ├── data/
-│   ├── asgn0_matA
-│   ├── asgn0_matB
-│   ├── asgn0_vecC
-│   └── asgn0_vecD
+│   ├── asgn0_matA       <- 3x3 matrix A
+│   ├── asgn0_matB       <- 3x3 matrix B
+│   ├── asgn0_vecC       <- 3x1 column vector C
+│   ├── asgn0_vecD       <- 3x1 column vector D
+│   ├── q1_input.txt     <- N, M for Q1
+│   ├── q2_input.txt     <- N, t0, r, d for Q2
+│   └── q5_input.txt     <- c1, c2 for Q5
 └── output/
-    └── question3_output.txt
+    ├── q1_output.txt
+    ├── q2_output.txt
+    ├── q3_output.txt
+    └── q5_output.txt
 ```
 
 ## Running the Scripts
 
 ```bash
-# from the repo root:
-python assignments/week00_warmup/question1.py
-python assignments/week00_warmup/question2.py
-python assignments/week00_warmup/question3.py   # reads from data/ automatically
-python assignments/week00_warmup/question5.py
+# from repo root:
+python assignments/week00_warmup/question1.py \
+    assignments/week00_warmup/data/q1_input.txt \
+    assignments/week00_warmup/output/q1_output.txt
+
+python assignments/week00_warmup/question2.py \
+    assignments/week00_warmup/data/q2_input.txt \
+    assignments/week00_warmup/output/q2_output.txt
+
+python assignments/week00_warmup/question3.py \
+    assignments/week00_warmup/output/q3_output.txt
+
+python assignments/week00_warmup/question5.py \
+    assignments/week00_warmup/data/q5_input.txt \
+    assignments/week00_warmup/output/q5_output.txt
 ```
