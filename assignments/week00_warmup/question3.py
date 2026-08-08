@@ -2,11 +2,13 @@
 question3.py
 ------------
 Problem : Read matrices A (3x3), B (3x3) and column vectors C (3x1), D (3x1)
-          from ASCII data files in the data/ subdirectory.
-          Compute and print:
+          from ASCII data files.  Compute and write to an output file:
             AB   - matrix product
             BC   - matrix-vector product
             D.C  - dot product (scalar)
+Usage   : python question3.py <output_file>
+          e.g.: python question3.py output/q3_output.txt
+          Data files are expected in data/ relative to this script.
 Author  : Aryan Bandyopadhyay
 Roll No.: 2411014
 Course  : PHY341/745 - Physics Computer Lab, NISER
@@ -19,41 +21,40 @@ Note    : All arithmetic is pure Python - no NumPy/SciPy.
 import os
 import sys
 
-# Path to the data/ folder sitting next to this script
-BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+# Data files sit in data/ next to this script
+BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR  = os.path.join(BASE_DIR, "data")
 
 
 # -- I/O helpers
 
 def read_matrix(filename: str) -> list:
-    """Read a whitespace-delimited ASCII file and return a 2-D list of floats."""
-    filepath = os.path.join(BASE_DIR, filename)
+    """Read a whitespace-delimited ASCII file; return a 2-D list of floats."""
     matrix = []
-    with open(filepath, "r") as f:
+    with open(os.path.join(DATA_DIR, filename), "r") as f:
         for line in f:
             stripped = line.strip()
-            if stripped:                          # skip blank lines
-                row = [float(x) for x in stripped.split()]
-                matrix.append(row)
+            if stripped and not stripped.startswith("#"):
+                matrix.append([float(x) for x in stripped.split()])
     return matrix
 
 
-def print_matrix(label: str, M: list) -> None:
-    """Pretty-print a matrix with a descriptive label."""
-    print(label)
+def format_matrix(label: str, M: list) -> str:
+    """Return a labelled, formatted string representation of matrix M."""
+    lines = [label]
     for row in M:
-        print("  [" + ", ".join(f"{x:10.6f}" for x in row) + "]")
+        lines.append("  [" + ", ".join(f"{x:10.6f}" for x in row) + "]")
+    return "\n".join(lines)
 
 
 # -- Numerical routines
 
 def matrix_multiply(X: list, Y: list) -> list:
     """
-    Multiply matrix X (n x p) by matrix Y (p x m) using the standard
-    O(n*p*m) triple loop.  Returns an n x m result matrix.
+    Multiply X (n x p) by Y (p x m) via the standard triple loop.
+    Returns an n x m result initialised with zeros in a loop.
     """
-    n = len(X);   p = len(X[0]);   m = len(Y[0])
-    # initialise result with zeros (loop-based, as required by course rules)
+    n = len(X);  p = len(X[0]);  m = len(Y[0])
     result = [[0.0 for _ in range(m)] for _ in range(n)]
     for i in range(n):
         for j in range(m):
@@ -67,11 +68,10 @@ def matrix_multiply(X: list, Y: list) -> list:
 def dot_product(X: list, Y: list) -> float:
     """
     Dot product of two column vectors stored as (n x 1) 2-D lists.
-    Returns a scalar.  Exits with an error if dimensions mismatch.
+    Returns a scalar; exits on dimension mismatch.
     """
     if len(X) != len(Y):
-        print("Error: vectors must have equal length for a dot product.",
-              file=sys.stderr)
+        print("Error: vector length mismatch in dot product.", file=sys.stderr)
         sys.exit(1)
     total = 0.0
     for i in range(len(X)):
@@ -79,20 +79,46 @@ def dot_product(X: list, Y: list) -> float:
     return total
 
 
-# -- Main computation
+def main() -> None:
+    # -- Argument check
+    if len(sys.argv) != 2:
+        print("Usage: python question3.py <output_file>", file=sys.stderr)
+        sys.exit(1)
 
-A = read_matrix("asgn0_matA")
-B = read_matrix("asgn0_matB")
-C = read_matrix("asgn0_vecC")
-D = read_matrix("asgn0_vecD")
+    output_file = sys.argv[1]
 
-AB = matrix_multiply(A, B)
-BC = matrix_multiply(B, C)
-DC = dot_product(D, C)
+    # -- Read matrices and vectors from data files
+    A = read_matrix("asgn0_matA")
+    B = read_matrix("asgn0_matB")
+    C = read_matrix("asgn0_vecC")
+    D = read_matrix("asgn0_vecD")
 
-print_matrix("Matrix AB:", AB)
-print_matrix("\nMatrix BC:", BC)
-print(f"\nDot product D.C = {DC}")
+    # -- Compute
+    AB = matrix_multiply(A, B)
+    BC = matrix_multiply(B, C)
+    DC = dot_product(D, C)
+
+    # -- Assemble output text
+    output_text = "\n".join([
+        format_matrix("Matrix AB:", AB),
+        "",
+        format_matrix("Matrix BC:", BC),
+        "",
+        f"Dot product D.C = {DC}",
+        "",
+        "# Note: AB[0][0] may show a ~1e-16 floating-point artefact",
+        "# (IEEE 754 double-precision rounding), which is not a coding error.",
+    ]) + "\n"
+
+    # -- Write to output file
+    with open(output_file, "w") as out:
+        out.write(output_text)
+
+    print(f"Output written to: {output_file}")
+
+
+if __name__ == "__main__":
+    main()
 
 # -- Output
 # Matrix AB:

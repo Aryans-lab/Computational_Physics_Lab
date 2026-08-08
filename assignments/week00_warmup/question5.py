@@ -1,10 +1,13 @@
 """
 question5.py
 ------------
-Problem : Define a MyComplex class and use it to compute the sum, difference,
-          product, and modulus of
-            c1 = (1.3 - 2.2j)
-            c2 = (-0.8 + 1.7j)
+Problem : Define a MyComplex class and compute the sum, difference, product,
+          and modulus of two complex numbers read from an external input file.
+Usage   : python question5.py <input_file> <output_file>
+          e.g.: python question5.py data/q5_input.txt output/q5_output.txt
+Input file format:
+    real1  imag1    <- c1 = real1 + imag1*j
+    real2  imag2    <- c2 = real2 + imag2*j
 Author  : Aryan Bandyopadhyay
 Roll No.: 2411014
 Course  : PHY341/745 - Physics Computer Lab, NISER
@@ -14,6 +17,7 @@ Note    : Python's built-in complex type is NOT used; all arithmetic is
 """
 
 import math
+import sys
 
 
 class MyComplex:
@@ -30,13 +34,9 @@ class MyComplex:
         self.real = real
         self.imag = imag
 
-    # -- Display
-
     def __repr__(self) -> str:
         sign = "+" if self.imag >= 0 else "-"
         return f"({self.real} {sign} {abs(self.imag)}j)"
-
-    # -- Arithmetic
 
     def __add__(self, other: "MyComplex") -> "MyComplex":
         """Return self + other."""
@@ -52,28 +52,63 @@ class MyComplex:
         imag_part = self.real * other.imag + self.imag * other.real
         return MyComplex(real_part, imag_part)
 
-    # -- Modulus
-
     def modulus(self) -> float:
         """Return |self| = sqrt(real^2 + imag^2)."""
         return math.sqrt(self.real ** 2 + self.imag ** 2)
 
 
-# -- Driver
+def main() -> None:
+    # -- Argument check
+    if len(sys.argv) != 3:
+        print("Usage: python question5.py <input_file> <output_file>",
+              file=sys.stderr)
+        sys.exit(1)
 
-c1 = MyComplex(1.3, -2.2)
-c2 = MyComplex(-0.8, 1.7)
+    input_file  = sys.argv[1]
+    output_file = sys.argv[2]
 
-print("c1 =", c1)
-print("c2 =", c2)
-print()
-print("Sum        :", c1 + c2)
-print("Difference :", c1 - c2)
-print("Product    :", c1 * c2)
-print(f"|c1|       : {c1.modulus():.10f}")
-print(f"|c2|       : {c2.modulus():.10f}")
+    # -- Read two complex numbers from file (skip comment lines)
+    rows = []
+    with open(input_file, "r") as f:
+        for line in f:
+            stripped = line.strip()
+            if stripped and not stripped.startswith("#"):
+                parts = stripped.split()
+                rows.append((float(parts[0]), float(parts[1])))
 
-# -- Output
+    c1 = MyComplex(rows[0][0], rows[0][1])
+    c2 = MyComplex(rows[1][0], rows[1][1])
+
+    # -- Compute all operations
+    c_sum  = c1 + c2
+    c_diff = c1 - c2
+    c_prod = c1 * c2
+    mod1   = c1.modulus()
+    mod2   = c2.modulus()
+
+    # -- Assemble output text
+    output_text = (
+        f"c1 = {c1}\n"
+        f"c2 = {c2}\n"
+        f"\n"
+        f"Sum        : {c_sum}\n"
+        f"Difference : {c_diff}\n"
+        f"Product    : {c_prod}\n"
+        f"|c1|       : {mod1:.10f}\n"
+        f"|c2|       : {mod2:.10f}\n"
+    )
+
+    # -- Write to output file
+    with open(output_file, "w") as out:
+        out.write(output_text)
+
+    print(f"Output written to: {output_file}")
+
+
+if __name__ == "__main__":
+    main()
+
+# -- Output (for c1=1.3-2.2j, c2=-0.8+1.7j)
 # c1 = (1.3 - 2.2j)
 # c2 = (-0.8 + 1.7j)
 #
