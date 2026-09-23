@@ -1,0 +1,8 @@
+#################################################################
+# Output:
+# Integral of e^(-x)x^4 from 0 to infinity:
+# Gaussian Laguerre Quadrature (N=3) = 24.0
+# Analytical value (4!) = 24
+# Difference = 0.0
+# Relative error = 0.0
+###################################################################

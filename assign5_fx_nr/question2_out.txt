@@ -1,0 +1,18 @@
+#######################################################
+# Output:
+# 1. Bisection Method:
+# The root is approximately 0.3604220151901245
+# The number of iterations taken is 23
+#
+# 2. Regula Falsi Method:
+# The root is approximately 0.3604217029603244
+# The number of iterations taken is 25
+#
+# 3. Newton-Raphson Method
+# The root is: 0.36042168047601975
+# The number of iterations taken is 3
+#
+# Newton-Raphson using numerical derivative:
+# The root is: 0.3604216804760228
+# The number of iterations taken is 3
+#########################################################

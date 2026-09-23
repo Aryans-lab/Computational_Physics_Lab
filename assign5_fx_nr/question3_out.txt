@@ -1,0 +1,8 @@
+############################################
+# Output:
+# Fixed Point Method:
+#
+# Fixed Point Method for first root (x = 3):
+# The root is: 2.9999998290170797
+# The number of iterations taken is 15
+##############################################

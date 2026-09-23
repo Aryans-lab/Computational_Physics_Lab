@@ -1,0 +1,7 @@
+###############################################################
+# Output:
+# The root is approximately 1.4019301055908207
+# The number of iterations taken is 22
+# The root is approximately 1.4019299316146128
+# The number of iterations taken is 9
+#################################################################

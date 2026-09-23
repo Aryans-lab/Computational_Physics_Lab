@@ -10,24 +10,12 @@ venv/
 env/
 .env
 
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
-
-# Jupyter Notebooks
-.ipynb_checkpoints/
-*.ipynb
-
-# IDE and OS artifacts
-.vscode/
-.idea/
-*.swp
-*.swo
-.DS_Store
-Thumbs.db
-
-# Scratch / temp output files generated during local runs
-# (committed output/ files are the verified reference outputs)
+# Scratch / temp files
 *.tmp
 *.bak
+Helper/extracted_slides.txt
+Helper/assignments_overview.txt
+
+# OS artifacts
+.DS_Store
+Thumbs.db
