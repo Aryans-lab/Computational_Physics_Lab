@@ -1,0 +1,24 @@
+Gauss-Jordan elimination (partial pivoting) — pivot-stress system
+  A = [[1, 1, 0], [0, 0, 1], [0, 1, 0]],  b = [1, 2, 3]
+  (column 2 has a zero pivot unless rows 2 and 3 are exchanged)
+  solution x = [-2.0, 3.0, 2.0]
+  residual ||Ax - b||_2 = 0.000e+00
+
+LU decomposition — Doolittle scheme, partial pivoting (P A = L U)
+  A = [[1, 2, 4], [3, 8, 14], [2, 6, 13]]
+  row permutation applied: perm = [1, 2, 0]  (first column: 3 > 1 > 2)
+  L =
+    1.000000  0.000000  0.000000
+    0.666667  1.000000  0.000000
+    0.333333  -1.000000  1.000000
+  U =
+    3.000000  8.000000  14.000000
+    0.000000  0.666667  3.666667
+    0.000000  0.000000  3.000000
+  reassembly check  ||L U - P A||_max = 0.000e+00
+
+Forward-backward substitution on  A x = b,  b = [1, 2, 3]:
+  solution x = [0.6666666666666661, -1.1666666666666663, 0.6666666666666665]
+  residual ||Ax - b||_2 = 1.831e-15
+  (cross-check: gauss_jordan on [A|b] gives the same vector)
+  max |x_LU - x_GJ| = 1.554e-15

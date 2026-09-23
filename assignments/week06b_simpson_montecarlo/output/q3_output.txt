@@ -1,0 +1,15 @@
+Monte Carlo estimate of int_{-1}^1 sin^2(x) dx (in-house LCG)
+exact value = 1 - sin(2)/2 = 0.5453512866
+N runs: 1100 to 50000 in steps of 100, seeds 1..490
+
+first N with |estimate - exact| < 0.0001 :
+  N = 5200   (seed 42)
+  estimate = 0.54525589
+  deviation  = 9.539e-05
+
+The deviation wanders inside the ~1/sqrt(N) envelope (central limit
+theorem): the error does not shrink smoothly, it is a statistical
+fluctuation — hence the wiggly lines, in contrast to the smooth
+error decay of the deterministic quadrature rules in week06a.
+
+Figures: q3_integral_vs_N.png, q3_deviation_vs_N.png (in figures/)

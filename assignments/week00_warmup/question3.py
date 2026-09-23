@@ -6,11 +6,11 @@ Problem : Read matrices A (3x3), B (3x3) and column vectors C (3x1), D (3x1)
             AB   - matrix product
             BC   - matrix-vector product
             D.C  - dot product (scalar)
-Usage   : python question3.py <output_file>
-          e.g.: python question3.py output/q3_output.txt
-          Data files are expected in data/ relative to this script.
+Usage   : python question3.py [output_file]
+          Default: output/q3_output.txt (relative to this script), so the
+          script runs from anywhere with no arguments.  Data files are
+          expected in data/ relative to this script.
 Author  : Aryan Bandyopadhyay
-Roll No.: 2411014
 Course  : PHY341/745 - Physics Computer Lab, NISER
 
 Note    : All arithmetic is pure Python - no NumPy/SciPy.
@@ -31,7 +31,7 @@ DATA_DIR  = os.path.join(BASE_DIR, "data")
 def read_matrix(filename: str) -> list:
     """Read a whitespace-delimited ASCII file; return a 2-D list of floats."""
     matrix = []
-    with open(os.path.join(DATA_DIR, filename), "r") as f:
+    with open(os.path.join(DATA_DIR, filename)) as f:
         for line in f:
             stripped = line.strip()
             if stripped and not stripped.startswith("#"):
@@ -54,7 +54,9 @@ def matrix_multiply(X: list, Y: list) -> list:
     Multiply X (n x p) by Y (p x m) via the standard triple loop.
     Returns an n x m result initialised with zeros in a loop.
     """
-    n = len(X);  p = len(X[0]);  m = len(Y[0])
+    n = len(X)
+    p = len(X[0])
+    m = len(Y[0])
     result = [[0.0 for _ in range(m)] for _ in range(n)]
     for i in range(n):
         for j in range(m):
@@ -80,12 +82,8 @@ def dot_product(X: list, Y: list) -> float:
 
 
 def main() -> None:
-    # -- Argument check
-    if len(sys.argv) != 2:
-        print("Usage: python question3.py <output_file>", file=sys.stderr)
-        sys.exit(1)
-
-    output_file = sys.argv[1]
+    args = sys.argv[1:]
+    output_file = args[0] if args else os.path.join(BASE_DIR, "output", "q3_output.txt")
 
     # -- Read matrices and vectors from data files
     A = read_matrix("asgn0_matA")

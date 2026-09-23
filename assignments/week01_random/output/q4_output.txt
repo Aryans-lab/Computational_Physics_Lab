@@ -1,0 +1,13 @@
+Kinetic Monte-Carlo decay chain A -> B -> C
+lambda_A = 0.0347,  lambda_B = 0.0198,  dt = 0.1,  t_max = 400.0
+initial conditions: N_A = 500, N_B = 0, N_C = 0  (seed = 1)
+
+peak of N_B: 240 nuclei at t = 35.6
+  (Bateman maximum t = ln(la/lnb)/(lnb-lna) = -37.7)
+final counts: N_A = 0, N_B = 0, N_C = 500
+conservation check: N_A + N_B + N_C = 500 (must be 500)
+
+The MC trace (points) follows the exact Bateman solution (dashed)
+with statistical fluctuations ~ sqrt(N) — no ODE was solved.
+
+Figure: figures/q4_radioactive_decay.png

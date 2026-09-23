@@ -1,0 +1,11 @@
+Jacobi and Gauss-Seidel on the 6x6 system (tol = 1e-06)
+
+Jacobi converged after 27 iterations:
+  x = [0.9999989754, 0.9999985510, 0.9999989754, 0.9999989754, 0.9999985510, 0.9999989754]
+  residual ||Ax - b||_2 = 4.596e-06
+
+Gauss-Seidel converged after 16 iterations:
+  x = [0.9999997531, 0.9999997892, 0.9999999100, 0.9999998510, 0.9999998728, 0.9999999457]
+  residual ||Ax - b||_2 = 7.779e-07
+
+speed-up: Jacobi/Gauss-Seidel = 1.69x iterations

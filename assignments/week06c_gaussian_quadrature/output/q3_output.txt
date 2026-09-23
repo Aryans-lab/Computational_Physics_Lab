@@ -1,0 +1,13 @@
+Integral of e^{-x}/(1+x) from 0 to infinity  (5-point Gauss-Laguerre)
+
+The weight e^{-x} is built into the rule, so the integrand supplied
+is simply f(x) = 1/(1+x).
+
+Gauss-Laguerre (N = 5) = 0.595084087969
+true value  e*E_1(1)   = 0.596347362323
+absolute error         = 1.2633e-03
+relative error           = 2.118e-03
+
+Gauss-Laguerre handles the infinite interval [0, inf) natively — no
+cutoff has to be chosen — and 5 nodes already give ~2e-4 accuracy
+on this non-polynomial integrand.

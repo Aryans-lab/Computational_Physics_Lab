@@ -3,13 +3,13 @@ question5.py
 ------------
 Problem : Define a MyComplex class and compute the sum, difference, product,
           and modulus of two complex numbers read from an external input file.
-Usage   : python question5.py <input_file> <output_file>
-          e.g.: python question5.py data/q5_input.txt output/q5_output.txt
+Usage   : python question5.py [input_file] [output_file]
+          Defaults: data/q5_input.txt -> output/q5_output.txt (relative to
+          this script), so the script runs from anywhere with no arguments.
 Input file format:
     real1  imag1    <- c1 = real1 + imag1*j
     real2  imag2    <- c2 = real2 + imag2*j
 Author  : Aryan Bandyopadhyay
-Roll No.: 2411014
 Course  : PHY341/745 - Physics Computer Lab, NISER
 
 Note    : Python's built-in complex type is NOT used; all arithmetic is
@@ -18,6 +18,7 @@ Note    : Python's built-in complex type is NOT used; all arithmetic is
 
 import math
 import sys
+from pathlib import Path
 
 
 class MyComplex:
@@ -58,18 +59,14 @@ class MyComplex:
 
 
 def main() -> None:
-    # -- Argument check
-    if len(sys.argv) != 3:
-        print("Usage: python question5.py <input_file> <output_file>",
-              file=sys.stderr)
-        sys.exit(1)
-
-    input_file  = sys.argv[1]
-    output_file = sys.argv[2]
+    base = Path(__file__).resolve().parent
+    args = sys.argv[1:]
+    input_file  = args[0] if len(args) >= 1 else str(base / "data" / "q5_input.txt")
+    output_file = args[1] if len(args) >= 2 else str(base / "output" / "q5_output.txt")
 
     # -- Read two complex numbers from file (skip comment lines)
     rows = []
-    with open(input_file, "r") as f:
+    with open(input_file) as f:
         for line in f:
             stripped = line.strip()
             if stripped and not stripped.startswith("#"):

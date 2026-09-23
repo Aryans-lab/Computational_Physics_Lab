@@ -1,328 +1,318 @@
-# Computational Physics Laboratory (PHY341 / PHY745) - Course Context & System Architecture
+# Computational Physics Laboratory (PHY341 / PHY745) — Course Context
 
-**Student:** Aryan Bandyopadhyay  
-**Roll Number:** 2411014  
-**Program:** Integrated MSc (3rd Year, Semester V), Physics  
-**Institution:** School of Physical Sciences, National Institute of Science Education and Research (NISER), Bhubaneswar  
-**Instructor:** Prof. Subhasish Basak (`sbasak@niser.ac.in`)  
-**Teaching Assistants:** Hemant Lohumi, Chinmoy Samanta  
-**Primary Repository Path:** `D:\NISER\Computational Physics Lab\`
+**Course:** PHY341 / PHY745 — Computational Physics
+**Program:** Integrated M.Sc. Physics, Semester V
+**Institution:** School of Physical Sciences, National Institute of Science Education and Research (NISER), Bhubaneswar
+**Semester:** 2025–26
+
+This document records the rules the coursework was written under, the
+layout of the repository, the mathematical reference for the library, and
+the standard code pattern every driver follows. It is the provenance layer:
+each `assignments/weekNN_*/` folder is a complete, self-contained submission
+that obeys these rules exactly.
 
 ---
 
 ## 1. Course Philosophy & Mandatory Ground Rules
 
-This course is designed to teach foundational numerical algorithms from scratch without reliance on "black-box" libraries. Submissions are strictly audited by the instructor and TAs under the following non-negotiable constraints:
+The course teaches foundational numerical algorithms from scratch, without
+black-box libraries. Submissions are audited under the following
+non-negotiable constraints:
 
-1. **Zero High-Level Library Policy:**
-   - Functions from `scipy`, `numpy.linalg`, or standard library `random` must **never** be used for core numerical algorithms (e.g., matrix inversion, solving linear systems, random number generation, root finding, numerical integration).
-   - Only elementary mathematical operations (`math.sqrt`, `math.sin`, `math.cos`, `math.log`, `math.exp`, `math.pi`, `math.ceil`) and basic plotting (`matplotlib.pyplot`) are permitted.
+1. **Zero high-level library policy**
+   - Functions from `scipy`, `numpy.linalg`, or the standard-library
+     `random` module must **never** be used for core numerical algorithms
+     (matrix inversion, linear solves, random number generation, root
+     finding, numerical integration).
+   - Only elementary math (`math.sqrt`, `math.sin`, `math.log`, …) and
+     basic plotting (`matplotlib.pyplot`) are permitted; NumPy/SciPy may
+     not touch the numerics at all.
    - Standard data structures are native Python lists and nested lists.
+2. **Single central library rule (`mylib.py`)**
+   - All numerical routines (LCG, LU, Cholesky, Jacobi, Gauss-Seidel,
+     Newton-Raphson, Laguerre, Simpson, Gaussian quadrature, …) live in
+     `mylib.py` in the same directory as the front code.
+   - Front-end scripts (`question1.py`, …) stay lightweight: read input,
+     call the library, write outputs/plots. Nothing else.
+3. **External file I/O (non-interactive)**
+   - Inputs are never hardcoded or taken via `input()`; they come from
+     external ASCII files in `data/`.
+   - Outputs are written to `output/qN_output.txt`, mirroring the console
+     run; explanatory physics notes are appended below the raw output.
+   - Plots go to `figures/` (saved, never displayed interactively).
+4. **Program headers & attribution**
+   - Every script opens with a comment block: problem statement, usage,
+     author.
+5. **Style & academic integrity**
+   - Code reads like that of a rigorous physics student: clean, commented,
+     direct, unbloated.
 
-2. **Single Central Library Rule (`mylib.py`):**
-   - All numerical routines (LCG, LU decomposition, Cholesky, Jacobi, Gauss-Seidel, Newton-Raphson, Laguerre, Simpson, Gaussian quadrature, etc.) **must** live inside `mylib.py` at the root directory.
-   - Front-end assignment scripts (`question1.py`, `question2.py`, etc.) must remain lightweight. They are strictly restricted to:
-     - Reading input data / command-line arguments.
-     - Invoking routines from `mylib.py`.
-     - Outputting results to console or external text files.
-     - Producing plots where requested.
-
-3. **External File I/O (Non-Interactive Requirement):**
-   - Inputs must **never** be hardcoded inside scripts or taken via interactive terminal prompts (`input()`).
-   - All input data (matrices, vectors, parameters) must be read from external ASCII files (e.g., `asgn0_matA`, `asgn2_mat1`, `asgn3_vec1`).
-   - Outputs must be redirected or saved to separate files (`output2.txt`, etc.) exactly mirroring program execution. Any explanatory physics comments must be appended below the raw output.
-
-4. **Program Headers & Attribution:**
-   - Every script must begin with a clear comment block containing:
-     - Problem statement.
-     - Name: Aryan Bandyopadhyay.
-     - Roll Number: 2411014.
-
-5. **Style & Academic Integrity:**
-   - Code must read like that of a rigorous, mathematically sound physics student—clean, well-commented, direct, and unbloated.
-   - Avoid robotic AI idioms, generic corporate boilerplate, and unnecessary object-oriented wrappers where simple, modular functions are expected.
+> **Repository convention on top of the course rules:** this repository
+> keeps one canonical `mylib.py` at the root (the single source of truth,
+> type-annotated and unit-tested), and `scripts/bundle.py` copies it
+> verbatim into each week folder. Each folder therefore stays
+> independently submittable — exactly as the course prescribes — while the
+> root copy is what the test suite and CI validate.
 
 ---
 
 ## 2. Directory Structure & Assignments Map
 
 ```
-D:\NISER\Computational Physics Lab\
-│
-├── mylib.py                 <-- Master library containing all algorithms
-├── mylib.py.bak             <-- Safe backup of original library
-├── COURSE_CONTEXT.md        <-- This architectural and context document
-│
-├── Assgn0\                  <-- Warmup: basic loops, series (GP/HP), complex numbers, matrix file I/O
-│   ├── question1.py         (Sum of first 20 even numbers, factorial of 8)
-│   ├── question2.py         (GP and HP series sums without analytical formula)
-│   ├── question3.py         (Matrix multiplication from external files: AB, BC, D.C)
-│   └── question5.py         (MyComplex class: addition, subtraction, multiplication, modulus)
-│
-├── assign1_rand\            <-- Pseudo-Random Number Generation (LCG, distributions, simulations)
-│   ├── question1.py         (Non-linear chaotic map x_{i+1} = c*x_i*(1-x_i), correlation plots)
-│   ├── question2.py         (LCG implementation, k-lag correlation check)
-│   ├── question3.py         (Monte Carlo determination of pi, throwing method & residual analysis)
-│   ├── question4.py         (Radioactive decay simulation A -> B -> C with kinetics overlay)
-│   └── question5.py         (Inverse-transform sampling: exponential distribution exp(-x))
-│
-├── assign2_gj_lu\           <-- Direct Linear Solvers: Gauss-Jordan & LU (Doolittle)
-│   ├── question1.py         (Library implementations with partial row pivoting)
-│   ├── question2.py         (3-variable linear system solution via Gauss-Jordan)
-│   └── question3.py         (LU decomposition verification: A = L * U)
-│
-├── assign3_lu_chsk\         <-- LU Forward-Backward & Cholesky Decomposition
-│   ├── question1.py         (Cholesky factorization routine with symmetry check)
-│   ├── question2.py         (Solving 6x6 linear system via LU forward-backward substitution)
-│   └── question3.py         (Solving Ax = b using Cholesky factor L: L y = b, L^T x = y)
-│
-├── assign4_jac_gs\          <-- Iterative Solvers: Jacobi, Gauss-Seidel, and SOR
-│   ├── question1.py         (Library routines with diagonal dominance row swapping)
-│   ├── question2.py         (Solving 4x4 system: comparing Jacobi vs Gauss-Seidel convergence)
-│   └── question3.py         (Tri-diagonal / sparse system: Gauss-Seidel vs SOR with omega = 1.57)
-│
-├── assign5_bi_rf\           <-- Root Finding: Bisection & Regula Falsi
-│   ├── question1.py         (Library routines with interval auto-bracketing)
-│   ├── question2.py         (Root of transcendental equation: ln(x/2) - sin(5x/2) = 0 in [1.5, 3.0])
-│   └── question3.py         (Root of -x - cos(x) = 0, bracket searching from [2, 3])
-│
-├── assign5_fx_nr\           <-- Root Finding: Fixed-Point & Newton-Raphson (1D & Multivariate)
-│   ├── question1.py         (Fixed-point and 1D Newton-Raphson library routines)
-│   ├── question2.py         (Convergence comparison: Bisection vs Regula Falsi vs Newton-Raphson)
-│   ├── question3.py         (Fixed-point iteration x = g(x) for x^2 - 2x - 3 = 0)
-│   └── question4.py         (Multivariable non-linear system: Jacobian via central differences)
-│
-├── assign5_poly\            <-- Polynomial Roots: Horner, Laguerre, & Synthetic Division
-│   ├── question1.py         (Horner value, 1st & 2nd derivatives, Laguerre iteration, deflation)
-│   └── question2.py         (Extracting all real roots of quartic and quintic polynomials)
-│
-├── assign6_midtrap\         <-- Closed Newton-Cotes Integration: Midpoint & Trapezoidal
-│   ├── question1.py         (Library implementations of Midpoint and Trapezoidal rules)
-│   └── question2.py         (Integrating 1/x, x*cos(x), x*arctan(x) for N = 4, 8, 15, 20 with analytical checks)
-│
-├── assign6b_simmc\          <-- Simpson's 1/3-Rule & Uniform Monte Carlo Integration
-│   ├── question1.py         (Simpson's rule with even-N validation, Monte Carlo with variance)
-│   ├── question2.py         (Integration to 10^-6 precision with theoretical N from error bounds)
-│   └── question3.py         (Monte Carlo integration of sin^2(x) on [-1, 1], tracking sigma / sqrt(N))
-│
-├── assign6c_gq\             <-- Gaussian Quadrature: Gauss-Legendre & Gauss-Laguerre
-│   ├── question1.py         (Unified routine for orders N = 1 to 6 using hardwired weights and nodes)
-│   ├── question2.py         (Gauss-Legendre 4-point vs Simpson 1/3 for x^2 / (1 + x^4))
-│   ├── question3.py         (Gauss-Laguerre 5-point for integral_0^inf e^(-x)/(1 + x) dx)
-│   └── question4.py         (Gauss-Laguerre integration of x^4 * e^(-x) comparing to 4! = 24)
-│
-└── Slides\                  <-- Lecture notes (PDFs from SPS NISER)
+.
+├── mylib.py                     # canonical library (pure stdlib)
+├── COURSE_CONTEXT.md            # this document
+├── scripts/
+│   ├── bundle.py                # mylib.py -> every week folder (idempotent)
+│   └── run_all.py               # run all 36 drivers, report ok/FAIL
+├── tests/                       # unit tests + golden-output regression
+├── Makefile                     # make all = bundle + run + lint + test
+├── .github/workflows/ci.yml     # Python 3.10 & 3.12
+└── assignments/
+    ├── week00_warmup/           # loops, series (GP/HP), complex numbers, matrix I/O
+    │   ├── question1.py         (sum of first N even numbers, factorial of M)
+    │   ├── question2.py         (GP & HP series sums, no closed form)
+    │   ├── question3.py         (matrix multiplication from files: AB, BC, D·C)
+    │   └── question5.py         (MyComplex: +, -, *, |z|)
+    ├── week01_random/           # PRNG (LCG), distributions, simulations
+    │   ├── question1.py         (chaos map vs LCG, lag-correlation plots)
+    │   ├── question2.py         (LCG, full-period audit, k-lag correlation)
+    │   ├── question3.py         (Monte-Carlo pi, residual analysis)
+    │   ├── question4.py         (radioactive decay A -> B -> C)
+    │   └── question5.py         (inverse-transform: exponential deviates)
+    ├── week02_gauss_jordan_lu/  # direct solvers: Gauss-Jordan & LU
+    │   ├── question1.py         (pivot-stress GJ system)
+    │   ├── question2.py         (3-variable system via Gauss-Jordan)
+    │   └── question3.py         (LU verification: P A = L U)
+    ├── week03_lu_cholesky/      # forward-backward & Cholesky
+    │   ├── question1.py         (Cholesky routine with symmetry check)
+    │   ├── question2.py         (6x6 system via LU forward-backward)
+    │   └── question3.py         (Cholesky solve: L y = b, L^T x = y)
+    ├── week04_jacobi_gs/        # iterative solvers
+    │   ├── question1.py         (benchmark: Jacobi vs G-S vs SOR)
+    │   ├── question2.py         (Jacobi vs G-S on the 6x6 system)
+    │   └── question3.py         (Poisson model: G-S vs SOR, omega = 1.57)
+    ├── week05a_bisection_regf/  # root finding: bracketing
+    │   ├── question1.py         (validation + auto-bracketing demo)
+    │   ├── question2.py         (root of ln(x/2) - sin(5x/2) = 0)
+    │   └── question3.py         (root of -x - cos(x) = 0 from [2, 3])
+    ├── week05b_fixedpoint_newton/  # fixed-point & Newton
+    │   ├── question1.py         (validation: 1-D & multivariate Newton)
+    │   ├── question2.py         (rate comparison: bi. / rf / NR, analytic vs numeric f')
+    │   ├── question3.py         (fixed-point for both roots of x^2 - 2x - 3)
+    │   └── question4.py         (coupled nonlinear system, numerical Jacobian)
+    ├── week05c_polynomial_roots/   # Horner, Laguerre, deflation
+    │   ├── question1.py         (library validation on a known cubic)
+    │   └── question2.py         (all real roots of the lab's quartic & quintic)
+    ├── week06a_midpoint_trapezoid/  # closed Newton-Cotes
+    │   ├── question1.py         (midpoint & trapezoidal validation, O(h^2) table)
+    │   └── question2.py         (1/x, x cos x, x arctan x at N = 4,8,15,20)
+    ├── week06b_simpson_montecarlo/  # Simpson & Monte Carlo
+    │   ├── question1.py         (Simpson exactness on cubics; MC sigma check)
+    │   ├── question2.py         (6 d.p. integration, N from error bounds)
+    │   └── question3.py         (MC of sin^2 on [-1,1], value & deviation vs N)
+    └── week06c_gaussian_quadrature/  # Gauss-Legendre & Gauss-Laguerre
+        ├── question1.py         (unified routine, tables n = 1..6, order-of-precision proof)
+        ├── question2.py         (4-pt Gauss-Legendre on x^2/(1+x^4) vs Simpson)
+        ├── question3.py         (5-pt Gauss-Laguerre on int_0^inf e^-x/(1+x))
+        └── question4.py         (3-pt Gauss-Laguerre on int_0^inf e^-x x^4 = 4!)
 ```
+
+Every week folder additionally contains: `README.md`, `data/` (inputs),
+`output/qN_output.txt` (committed golden outputs), `figures/` (PNGs), and
+`mylib.py` (bundled copy, gitignored).
 
 ---
 
-## 3. Mathematical & Algorithmic Blueprint
+## 3. Mathematical & Algorithmic Reference
 
 ### 3.1 Pseudo-Random Numbers (`myrand`, LCG)
-- **Recurrence:** $x_{i+1} = (a \cdot x_i + c) \pmod m$
-- **Parameters (GCC Runtime / Slide Standard):** $a = 1103515245$, $c = 12345$, $m = 32768$ ($2^{15}$).
-- **Transformation to uniform $[a, b)$:** $X = a + (b - a) \cdot \xi$, where $\xi = x_i / m \in [0, 1)$.
-- **Transformation to exponential $\lambda e^{-\lambda y}$:** By inverse CDF: $y = -\frac{1}{\lambda} \ln(u)$, where $u \in (0, 1]$.
+- **Recurrence:** $x_{i+1} = (a \, x_i + c) \pmod m$
+- **Parameters (full-period, Hull-Dobell):** $a = 1103515245$,
+  $c = 12345$, $m = 32768 = 2^{15}$.
+- **Uniform $[A, B)$:** $X = A + (B - A)\,\xi$, $\xi = x_i / m$.
+- **Exponential $\lambda e^{-\lambda y}$:** inverse-CDF
+  $y = -\lambda^{-1}\ln u$, $u \in (0, 1]$.
 
 ### 3.2 Direct Linear Solvers ($A x = b$)
-- **Gauss-Jordan Elimination:** Augmented matrix $[A \mid b] \to [I \mid x]$. Uses partial row pivoting (choosing pivot row $p \ge i$ maximizing $|A_{pi}|$) to eliminate roundoff explosion and prevent division by zero.
-- **Matrix Inversion:** Gauss-Jordan on $[A \mid I] \to [I \mid A^{-1}]$.
-- **LU Decomposition (Doolittle):** $A = L \cdot U$, where $L_{ii} = 1$ (unit lower triangular) and $U$ is upper triangular.
-  $$U_{ij} = A_{ij} - \sum_{k=0}^{i-1} L_{ik} U_{kj} \quad (j \ge i)$$
-  $$L_{ji} = \frac{1}{U_{ii}} \left( A_{ji} - \sum_{k=0}^{i-1} L_{jk} U_{ki} \right) \quad (j > i)$$
-- **Forward-Backward Substitution:**
-  1. Solve $L y = b$ (forward: $y_0 = b_0$, $y_i = b_i - \sum_{j<i} L_{ij} y_j$).
-  2. Solve $U x = y$ (backward: $x_{n-1} = y_{n-1}/U_{n-1,n-1}$, $x_i = \frac{1}{U_{ii}} (y_i - \sum_{j>i} U_{ij} x_j)$).
-- **Free Determinant:** $\det(A) = \det(L) \det(U) = \prod_{i=0}^{n-1} U_{ii}$.
+- **Gauss-Jordan:** $[A \mid b] \to [I \mid x]$ via RREF, with
+  partial row pivoting (scale-relative tolerance) and explicit
+  classification of inconsistent / dependent / non-square systems.
+- **Matrix inversion:** $[A \mid I] \to [I \mid A^{-1}]$.
+- **LU (Doolittle, partial pivoting):** $P A = L U$, $L_{ii} = 1$.
+  $$U_{ij} = A_{ij} - \sum_{k < i} L_{ik} U_{kj}, \qquad
+    L_{ji} = \frac{1}{U_{ii}} \Big( A_{ji} - \sum_{k < i} L_{jk} U_{ki} \Big)$$
+  At each pivot, the already-computed multipliers $L[i][k], k < i$ move with
+  the row swap; swapping whole $L$ rows would dislocate the unit diagonal.
+- **Forward-backward:** solve $L y = b$, then $U x = y$.
+- **Free determinant:** $\det A = \operatorname{sign}(P)\prod_i U_{ii}$,
+  with $\operatorname{sign}(P)$ from the permutation's cycle decomposition.
 
-### 3.3 Cholesky Decomposition ($A = L L^T$)
-- **Applicability:** Strictly symmetric ($A = A^T$) and positive-definite ($x^T A x > 0 \iff$ all leading principal minors $> 0$).
+### 3.3 Cholesky ($A = L L^T$)
+- **Applicability:** symmetric ($A = A^T$) and positive-definite.
+  Both conditions are checked *before* the first square root.
 - **Algorithm:**
-  $$L_{ii} = \sqrt{A_{ii} - \sum_{k=0}^{i-1} L_{ik}^2}$$
-  $$L_{ji} = \frac{1}{L_{ii}} \left( A_{ji} - \sum_{k=0}^{i-1} L_{jk} L_{ik} \right) \quad (j > i)$$
-- **Efficiency:** Twice as fast as LU ($\sim \frac{1}{3} n^3$ flops vs $\frac{2}{3} n^3$).
-- **Forward-Backward Solver:** Solve $L y = b$, then $L^T x = y$.
+  $$L_{ii} = \sqrt{A_{ii} - \sum_{k < i} L_{ik}^2}, \qquad
+    L_{ji} = \frac{1}{L_{ii}} \Big( A_{ji} - \sum_{k < i} L_{jk} L_{ik} \Big)$$
+- **Cost:** $\tfrac{1}{3}n^3$ flops — about half of a full LU.
 
-### 3.4 Iterative Linear Solvers (Jacobi, Gauss-Seidel, SOR)
-- **Convergence Requirement:** Guaranteed if $A$ is strictly diagonally dominant ($|A_{ii}| > \sum_{j \ne i} |A_{ij}|$) or symmetric positive-definite (for Gauss-Seidel).
-- **Jacobi:** Updates evaluated strictly using prior step $x^{(k)}$:
-  $$x_i^{(k+1)} = \frac{1}{A_{ii}} \left( b_i - \sum_{j \ne i} A_{ij} x_j^{(k)} \right)$$
-- **Gauss-Seidel:** Uses newly computed values immediately in-place:
-  $$x_i^{(k+1)} = \frac{1}{A_{ii}} \left( b_i - \sum_{j < i} A_{ij} x_j^{(k+1)} - \sum_{j > i} A_{ij} x_j^{(k)} \right)$$
-- **Successive Over-Relaxation (SOR):**
-  $$x_i^{(k+1)} = (1 - \omega) x_i^{(k)} + \frac{\omega}{A_{ii}} \left( b_i - \sum_{j < i} A_{ij} x_j^{(k+1)} - \sum_{j > i} A_{ij} x_j^{(k)} \right)$$
-  - $\omega = 1$: Standard Gauss-Seidel.
-  - $1 < \omega < 2$: Over-relaxation (accelerates slow convergence).
-  - $0 < \omega < 1$: Under-relaxation (stabilizes divergence / oscillations).
+### 3.4 Iterative Solvers (Jacobi, Gauss-Seidel, SOR)
+- **Convergence:** guaranteed for strictly diagonally dominant or
+  symmetric positive-definite $A$ (Gauss-Seidel).
+- **Jacobi:** $x_i^{(k+1)} = \frac{1}{A_{ii}}\big( b_i - \sum_{j \ne i} A_{ij} x_j^{(k)} \big)$
+- **Gauss-Seidel:** same, but reuses $x_j^{(k+1)}$ for $j < i$ in place.
+- **SOR:** $x_i^{(k+1)} = (1-\omega) x_i^{(k)} + \frac{\omega}{A_{ii}}
+  \big( b_i - \sum_{j < i} A_{ij} x_j^{(k+1)} - \sum_{j > i} A_{ij} x_j^{(k)} \big)$,
+  with $\omega = 1$ recovering Gauss-Seidel; $1 < \omega < 2$ accelerates.
+  For the tridiagonal Poisson model $(-1, 2, -1)$ the optimal value is
+  $\omega_{\text{opt}} = 2/(1 + \sin(\pi/(n+1)))$.
 
-### 3.5 Root Finding for Non-Linear Equations
-- **Auto-Bracketing (`bracket_root`):**
-  If $f(a) f(b) > 0$, expand outwards:
-  - If $|f(a)| < |f(b)| \implies a \leftarrow a - \beta(b - a)$
-  - If $|f(b)| < |f(a)| \implies b \leftarrow b + \beta(b - a)$
-- **Bisection:** $c = (a + b)/2$. Retains subinterval with opposite sign. Linear convergence: error halves every iteration ($|b_n - a_n| = |b_0 - a_0| / 2^n$).
-- **Regula Falsi (False Position):** Secant chord:
-  $$c = \frac{a f(b) - b f(a)}{f(b) - f(a)} = b - \frac{f(b)(b - a)}{f(b) - f(a)}$$
-- **Fixed-Point Iteration:** $x = g(x) \implies x_{n+1} = g(x_n)$. Converges iff $|g'(x^*)| < 1$.
-- **Newton-Raphson (1D):**
-  $$x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}$$
-  Derivative $f'(x)$ can be supplied analytically or computed numerically via central difference: $f'(x) \approx \frac{f(x+h) - f(x-h)}{2h}$. Quadratic convergence near simple roots.
-- **Multivariate Newton-Raphson System:** For $F(x) = [f_1(x), \dots, f_n(x)]^T = 0$:
-  $$x^{(k+1)} = x^{(k)} - [J(x^{(k)})]^{-1} F(x^{(k)})$$
-  where $J_{ij} = \partial f_i / \partial x_j$ is evaluated numerically via central differences and inverted via Gauss-Jordan elimination.
+### 3.5 Root Finding
+- **Auto-bracketing:** if $f(a) f(b) > 0$, push out the side with smaller
+  $|f|$ (step growing 10% per push) until a sign change appears.
+- **Bisection:** $c = (a+b)/2$; linear, error halves each step.
+- **Regula falsi:** secant
+  $c = b - \dfrac{f(b)(b-a)}{f(b) - f(a)}$; superlinear, with the known
+  "stuck endpoint" pathology.
+- **Fixed point:** $x_{n+1} = g(x_n)$; converges iff $|g'(x^*)| < 1$.
+- **Newton (1-D):** $x_{n+1} = x_n - f(x_n)/f'(x_n)$; $f'$ analytic or
+  central-difference; quadratic near simple roots.
+- **Newton (multivariate):** $x^{(k+1)} = x^{(k)} + \delta x$ where
+  $J(x^{(k)})\,\delta x = -F(x^{(k)})$ is *solved* (Gauss-Jordan) rather
+  than inverted; $J_{ij} = \partial f_i / \partial x_j$ by central
+  differences.
 
-### 3.6 Polynomial Roots (Horner, Laguerre, Deflation)
-- **Horner's Scheme (`polynomial_value`):** Evaluates $P(x) = a_n x^n + \dots + a_0$ in $O(n)$ additions and multiplications:
-  $$b_n = a_n, \quad b_k = a_k + x \cdot b_{k+1}$$
-- **Laguerre's Method:**
-  $$G = \frac{P'(x)}{P(x)}, \quad H = G^2 - \frac{P''(x)}{P(x)}$$
-  $$a = \frac{n}{G \pm \sqrt{(n - 1)(n H - G^2)}}$$
-  Sign in denominator chosen to maximize $|G \pm \dots|$ (avoiding round-off cancellation). Update: $x_{new} = x - a$.
-- **Deflation via Synthetic Division:** Divide $P(x)$ by $(x - r)$ to obtain $Q(x)$ of degree $n - 1$. Deflate iteratively to isolate all real roots.
+### 3.6 Polynomial Roots
+- **Horner:** $b_n = a_n$, $b_k = a_k + x\, b_{k+1}$ — $O(n)$ evaluation;
+  the same scheme yields $P'(x), P''(x)$ by coefficient differentiation.
+- **Laguerre:** with $G = P'/P$, $H = G^2 - P''/P$,
+  $$a = \frac{n}{G \pm \sqrt{(n-1)(nH - G^2)}}$$
+  (sign chosen to avoid cancellation); update $x \leftarrow x - a$.
+  Cubic near simple roots; **linear** near multiple roots.
+- **Deflation:** synthetic division by $(x - r)$ (remainder must vanish);
+  repeat until linear, then solve the last factor exactly.
+- **Contract:** real roots only — a step with no real solution raises
+  `ValueError` instead of returning a phantom.
 
-### 3.7 Numerical Integration & Quadrature
-- **Composite Midpoint Rule:**
-  $$M_N = h \sum_{i=0}^{N-1} f(a + (i + 0.5)h), \quad h = \frac{b - a}{N}$$
-  Theoretical error bound: $E_M \le \frac{(b - a)^3}{24 N^2} \max_{x \in [a, b]} |f''(x)|$.
-- **Composite Trapezoidal Rule:**
-  $$T_N = \frac{h}{2} \left[ f(a) + 2 \sum_{i=1}^{N-1} f(a + i h) + f(b) \right]$$
-  Theoretical error bound: $E_T \le \frac{(b - a)^3}{12 N^2} \max_{x \in [a, b]} |f''(x)|$.
-- **Composite Simpson's 1/3-Rule:**
-  $$S_N = \frac{h}{3} \left[ f(a) + 4 \sum_{odd} f(x_i) + 2 \sum_{even} f(x_i) + f(b) \right]$$
-  Requires $N$ to be an **even integer** (odd number of grid points).  
-  Theoretical error bound: $E_S \le \frac{(b - a)^5}{180 N^4} \max_{x \in [a, b]} |f''''(x)|$.  
-  Relation: $S_{2N} = \frac{2}{3} M_N + \frac{1}{3} T_N$.
-- **Uniform Monte Carlo Integration:**
-  $$F_N = (b - a) \frac{1}{N} \sum_{i=1}^N f(X_i), \quad \sigma_{integral} = \frac{(b - a) \sigma_f}{\sqrt{N}}$$
-  Convergence rate scales as $O(N^{-1/2})$, independent of dimension.
-- **Gaussian Quadrature:**
-  - **Gauss-Legendre:** Over $[-1, 1]$, mapped to $[a, b]$ via $x = \frac{b - a}{2} t + \frac{b + a}{2}$:
-    $$\int_a^b f(x) dx \approx \frac{b - a}{2} \sum_{i=1}^N w_i f\left( \frac{b - a}{2} t_i + \frac{b + a}{2} \right)$$
-    Exact for all polynomials up to degree $2N - 1$.
-  - **Gauss-Laguerre:** Over $[0, \infty)$ with weight function $e^{-t}$:
-    $$\int_0^\infty e^{-t} f(t) dt \approx \sum_{i=1}^N w_i f(t_i)$$
-    Note: When calling `gaussian_quadrature(f, 0, inf, N, method='laguerre')`, $f(t)$ represents the factor *without* $e^{-t}$.
+### 3.7 Quadrature
+- **Composite midpoint:** $M_N = h \sum_{i=0}^{N-1} f(a + (i+\tfrac12)h)$,
+  $\lVert E \rVert \le \frac{(b-a)^3}{24 N^2} \max |f''|$.
+- **Composite trapezoid:** $T_N = \frac{h}{2}\big[ f(a) + 2\sum_{i=1}^{N-1} f(a+ih) + f(b) \big]$,
+  $\lVert E \rVert \le \frac{(b-a)^3}{12 N^2} \max |f''|$.
+- **Composite Simpson 1/3** ($N$ even): $S_N = \frac{h}{3}\big[ f(a) + 4\sum_{odd} f + 2\sum_{even} f + f(b) \big]$,
+  $\lVert E \rVert \le \frac{(b-a)^5}{180 N^4} \max |f^{(4)}|$;
+  identity $S_{2N} = \tfrac23 M_N + \tfrac13 T_N$.
+- **Uniform Monte Carlo:** $F_N = (b-a)\,\bar f$,
+  $\sigma_I = \dfrac{(b-a)\,\sigma_f}{\sqrt N}$; rate $O(N^{-1/2})$,
+  dimension-independent.
+- **Gaussian quadrature:** $n$ nodes exact for $\deg \le 2n-1$.
+  - *Legendre:* $[-1,1]$ mapped by $x = \frac{b-a}{2}t + \frac{b+a}{2}$.
+  - *Laguerre:* $\int_0^\infty e^{-t} f(t)\,dt \approx \sum_i w_i f(t_i)$ —
+    the weight is the quadrature's own, so the supplied $f$ excludes
+    $e^{-t}$.
+  - Tables for $n = 1 \dots 6$ are hardwired in `mylib.py` and validated
+    against NumPy's `leggauss` / `laggauss` in the test suite.
 
 ---
 
-## 4. Master Library Functions Reference (`mylib.py`)
+## 4. Library Reference
 
-| Function | Signature | Description |
-|---|---|---|
-| `myrand` | `(seed=0)` | LCG PRNG generator returning float in $[0, 1)$ |
-| `random_uniform` | `(a=0.0, b=1.0)` | Uniform random float in $[a, b)$ |
-| `random_exponential` | `(lam=1.0)` | Exponential random deviate $\sim \lambda e^{-\lambda x}$ |
-| `MyComplex` | `(real, image=0.0)` | Complex number class with arithmetic methods & operator overloading |
-| `read_matrix_from_file` | `(filename)` | Robust ASCII matrix loader (handles full or relative paths) |
-| `write_matrix_to_file` | `(matrix, filename, precision=6)` | Writes 2D/1D list to external file in aligned columns |
-| `print_matrix` | `(matrix, label=None, precision=4)` | Formatted column-aligned printer |
-| `matrix_multiply` | `(X, Y)` | Standard matrix multiplication $X \cdot Y$ |
-| `dot_product_vector` | `(X, Y)` | Vector dot product (supports 1D lists or column vectors) |
-| `matrix_transpose` | `(A)` | Computes transpose $A^T$ |
-| `matrix_add` / `matrix_sub` | `(A, B)` | Element-wise matrix addition / subtraction |
-| `matrix_vector_multiply` | `(A, x)` | Matrix-vector product $A x$ |
-| `vector_norm` | `(v, p=2)` | Vector $L_2$, $L_1$, or $L_\infty$ norm |
-| `matrix_residual` | `(A, x, b)` | Verification helper: $\|A x - b\|_2$ |
-| `is_symmetric` | `(A, tol=1e-9)` | Verification helper: checks if $A = A^T$ |
-| `is_diagonally_dominant` | `(A, strict=False)` | Verification helper: checks diagonal dominance |
-| `matrix_determinant_lu` | `(A)` | Evaluates $\det(A) = \prod U_{ii}$ via Doolittle LU |
-| `gauss_jordan_elimination_augmented`| `(augmented_matrix)` | Solves $[A \mid b]$ with partial row pivoting |
-| `gauss_jordan_inverse` | `(A)` | Inverts matrix via $[A \mid I] \to [I \mid A^{-1}]$ |
-| `lu_decomposition` | `(A)` | Doolittle LU factorization ($L_{ii} = 1$) |
-| `lu_forback` | `(A, b, method='lu')` | Solves $A x = b$ via LU/Cholesky forward-backward substitution |
-| `cholesky_decomposition`| `(A)` | Computes lower factor $L$ such that $A = L L^T$ |
-| `cholesky_forback` | `(L, b)` | Solves $L y = b$, then $L^T x = y$ |
-| `jacobi_it` | `(A, b, tol=1e-8, max_iterations=1000)` | Jacobi iterative solver with diagonal dominance pivoting |
-| `gauss_seidel` | `(A, b, tol=1e-8, max_iterations=500)` | Gauss-Seidel solver with in-place sequential updates |
-| `sor_gauss_seidel` | `(A, b, tol=1e-8, max_iterations=500, omega=1.0)` | Successive Over-Relaxation solver |
-| `bracket_root` | `(f, a, b, beta=0.1, max_iter=100)` | Expands interval until $f(a) f(b) < 0$ |
-| `bisection` | `(f, a, b, accuracy=1e-8, max_iterations=100)` | Bisection root finder with auto-bracketing |
-| `regula_falsi` | `(f, a, b, accuracy=1e-8, max_iterations=100)` | False position root finder with auto-bracketing |
-| `fixed_point` | `(g, x0, accuracy=1e-6, max_iterations=30)` | Picard iteration $x_{n+1} = g(x_n)$ |
-| `finite_difference_derivative` | `(f, x, h=1e-5, order=1)` | Central difference 1st ($order=1$) or 2nd ($order=2$) derivative |
-| `partial_derivative` | `(f, var_index, point, h=1e-5)` | Multivariable partial derivative $\partial f / \partial x_i$ |
-| `jacobian` | `(f, point, h=1e-6)` | Numerical Jacobian matrix for vector functions |
-| `newton_raphson` | `(f, df=None, x0=0.0, accuracy=1e-6, max_iterations=30, h=1e-5)` | 1D Newton-Raphson (analytical or numerical derivative) |
-| `newton_raphson_system` | `(f, J, initial_guess, accuracy=1e-6, max_iterations=30)` | Multivariate non-linear system solver via Newton-Raphson |
-| `polynomial_value` | `(coefficients, x)` | Horner's method for polynomial evaluation |
-| `polynomial_first_derivative` | `(coefficients)` | Analytical coefficients of $P'(x)$ |
-| `polynomial_second_derivative`| `(coefficients)` | Analytical coefficients of $P''(x)$ |
-| `laguerre` | `(coefficients, b0, accuracy1=1e-8, accuracy2=1e-6, max_iterations=30)` | Single real root finder via Laguerre formula |
-| `synthetic_division` | `(coefficients, root, accuracy=1e-6)` | Polynomial deflation by $(x - r)$ |
-| `laguerre_roots` | `(coefficients, b0=0.0)` | Finds all real roots via Laguerre + deflation |
-| `midpoint` | `(f, a, b, N)` | Composite midpoint numerical integration |
-| `trapezoidal` | `(f, a, b, N)` | Composite trapezoidal numerical integration |
-| `simpson` | `(f, a, b, N)` | Simpson's 1/3-rule (returns `(integral, evaluations)`) |
-| `monte_carlo` | `(f, a, b, N, seed=1)` | Uniform Monte Carlo (returns `(integral, sigma_f, sigma_int)`) |
-| `integration_error_bound_N` | `(method, a, b, max_deriv, target_error)` | Evaluates theoretical minimum $N$ from error bounds |
-| `gaussian_quadrature` | `(f, a, b, N, method='legendre')` | Unified Gauss-Legendre and Gauss-Laguerre quadrature ($N \in \{1..6\}$) |
+The authoritative, typed reference is the module docstring of
+[`mylib.py`](mylib.py) itself (kept in sync by the test suite and CI). The
+surface, in module order:
+
+1. **RNG & distributions** — `myrand`, `myrand_reset`, `random_uniform`,
+   `random_exponential`, plus the `LCG_A / LCG_C / LCG_M` constants.
+2. **Numbers & vectors** — `MyComplex` (with `+`, `-`, `*`, `abs`, `==`),
+   `dot_product_vector`, `vector_norm`.
+3. **Matrix utilities & I/O** — `read_matrix_from_file`,
+   `read_vector_from_file`, `write_matrix_to_file`, `print_matrix`,
+   `matrix_multiply`, `matrix_transpose`, `matrix_add`, `matrix_sub`,
+   `matrix_vector_multiply`, `matrix_residual`, `is_symmetric`,
+   `is_diagonally_dominant`.
+4. **Direct solvers** — `gauss_jordan_elimination_augmented`,
+   `gauss_jordan_inverse`, `lu_decomposition` (returns `L, U, perm`),
+   `lu_forback`, `matrix_determinant_lu`, `cholesky_decomposition`,
+   `cholesky_forback`.
+5. **Iterative solvers** — `jacobi_it`, `gauss_seidel`,
+   `sor_gauss_seidel` (each returns `(solution, iterations)`).
+6. **Root finding** — `bracket_root`, `bisection`, `regula_falsi`,
+   `fixed_point`, `finite_difference_derivative`, `partial_derivative`,
+   `jacobian`, `newton_raphson`, `newton_raphson_system`.
+7. **Polynomials** — `polynomial_value`, `polynomial_first_derivative`,
+   `polynomial_second_derivative`, `laguerre`, `synthetic_division`,
+   `laguerre_roots`.
+8. **Quadrature** — `midpoint`, `trapezoidal`, `simpson` (returns
+   `(integral, evaluations)`), `monte_carlo` (returns
+   `(integral, sigma_f, sigma_I)`, seeded),
+   `integration_error_bound_N`, `gaussian_quadrature` (one routine for
+   `method='legendre' | 'laguerre'`), plus the `GAUSS_LEGENDRE` and
+   `GAUSS_LAGUERRE` tables.
 
 ---
 
-## 5. Standard Code Template for Assignments
+## 5. Standard Code Template (front code)
 
-When generating new scripts for class assignments, adhere strictly to this pattern:
+Every driver follows this shape — I/O and presentation only, numerics in
+the library:
 
 ```python
-# Problem: [Exact statement from assignment sheet]
-# Author: Aryan Bandyopadhyay | Roll Number: 2411014
-# Computational Physics Lab (PHY341 / PHY745), NISER
+"""
+questionN.py — weekNN_topic
+---------------------------
+Problem : <one-line statement from the assignment sheet>
+Usage   : python questionN.py [output_file]
+          Defaults: output/qN_output.txt
+"""
 
-import math
+from __future__ import annotations
+
 import sys
-import os
+from pathlib import Path
 
-# Import required routines exclusively from central library
-from mylib import (
-    read_matrix_from_file,
-    write_matrix_to_file,
-    lu_forback,
-    matrix_residual,
-    print_matrix
-)
+from mylib import some_routine, matrix_residual   # numerics: library only
 
-if __name__ == '__main__':
-    # 1. Read input parameters / matrices non-interactively
-    matrix_file = 'asgn3_mat1'
-    vector_file = 'asgn3_vec1'
-    
-    A = read_matrix_from_file(matrix_file)
-    b = read_matrix_from_file(vector_file)
-    
-    # 2. Invoke library routine
-    x_sol = lu_forback(A, b, method='lu')
-    
-    # 3. Verify solution integrity via residual
-    res = matrix_residual(A, x_sol, b)
-    
-    # 4. Display formatted results
-    print("Solution vector x:")
-    for i, val in enumerate(x_sol):
-        print(f"  x[{i}] = {val:.6f}")
-    print(f"\nVerification Residual ||Ax - b|| = {res:.4e}")
-    
-    # 5. Save output to file as required by lab protocol
-    output_filename = 'output2.txt'
-    with open(output_filename, 'w') as f:
-        f.write("# Computed Solution Vector:\n")
-        for i, val in enumerate(x_sol):
-            f.write(f"x[{i}] = {val:.6f}\n")
-        f.write(f"\n# Verification Residual: {res:.4e}\n")
+BASE_DIR = Path(__file__).resolve().parent
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = sys.argv[1:] if argv is None else list(argv)
+    out_file = Path(args[0]) if args else BASE_DIR / "output" / "qN_output.txt"
+
+    # 1. read inputs (non-interactive, from data/ relative to this script)
+    A = mylib.read_matrix_from_file(BASE_DIR / "data" / "asgn3_mat1")
+    b = mylib.read_vector_from_file(BASE_DIR / "data" / "asgn3_vec1")
+
+    # 2. numerics: call the library
+    x = lu_forback(A, b)
+    res = matrix_residual(A, x, b)
+
+    # 3. report: verified output to file (and console)
+    lines = [f"  x[{i}] = {v:.10f}" for i, v in enumerate(x)]
+    lines.append(f"  residual ||Ax - b||_2 = {res:.3e}")
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    out_file.write_text("\n".join(lines) + "\n")
+    print(f"Output written to: {out_file}")
+
+
+if __name__ == "__main__":
+    main()
 ```
+
+Plotting drivers additionally set `matplotlib.use("Agg")` before importing
+`pyplot` and save to `figures/` — never `plt.show()`.
 
 ---
 
 ## 6. Post-Midsem Roadmap
 
-Topics scheduled for the second half of the semester:
-1. **Ordinary Differential Equations (ODEs):**
-   - Forward Euler, Backward Euler, Predictor-Corrector (Heun / Milne).
-   - Classical 4th-Order Runge-Kutta (RK4) for coupled systems.
-   - Initial Value Problems (IVP) and Boundary Value Problems (Shooting Method, Finite Difference).
-2. **Least Squares Curve Fitting:**
-   - Linear regression, polynomial regression via normal equations.
-   - Non-linear least squares (Gauss-Newton, Levenberg-Marquardt).
-3. **Partial Differential Equations (PDEs) & Eigenvalues (if time permits):**
-   - Heat/Diffusion equation (FTCS, Crank-Nicolson).
-   - Wave equation.
-   - Power method and QR algorithm for matrix eigenvalues.
+Topics scheduled for the second half of the semester (not yet part of this
+repository):
+
+1. **ODEs** — Euler (forward/backward), Heun/Milne predictor-corrector,
+   classical RK4 for coupled systems, IVPs and BVPs (shooting, finite
+   differences).
+2. **Least-squares fitting** — linear/polynomial regression via normal
+   equations, Gauss-Newton, Levenberg-Marquardt.
+3. **PDEs & eigenvalues (if time permits)** — FTCS / Crank-Nicolson for
+   diffusion, the wave equation, power method and QR iteration.

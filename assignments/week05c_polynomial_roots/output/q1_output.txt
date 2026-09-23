@@ -1,0 +1,11 @@
+Validation of Laguerre's method + synthetic deflation
+P(x) = x^3 - 6x^2 + 11x - 6 = (x-1)(x-2)(x-3),  initial guess b0 = 2.5
+
+              root  iterations  |P(root)|    error vs exact
+    0.999999998704           0    2.592e-09  2.000e+00
+    2.000000002592           4    2.592e-09  1.000e+00
+    2.999999998704           2    2.592e-09  1.000e+00
+
+Deflation flow: each root is divided out with synthetic division
+(Horner's scheme), and the next root search warm-starts from the root
+just found — the last (linear) factor is solved exactly.

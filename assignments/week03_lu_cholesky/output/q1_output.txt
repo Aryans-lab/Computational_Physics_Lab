@@ -1,0 +1,18 @@
+Cholesky factorisation A = L L^T (with symmetry check)
+A (from data/asgn3_mat2), symmetric: True
+  [4, 1, 1, 1]
+  [1, 3, -1, 1]
+  [1, -1, 2, 0]
+  [1, 1, 0, 2]
+
+L (lower triangular, positive diagonal):
+  [ 2.0000000000,  0.0000000000,  0.0000000000,  0.0000000000]
+  [ 0.5000000000,  1.6583123952,  0.0000000000,  0.0000000000]
+  [ 0.5000000000, -0.7537783614,  1.0871146130,  0.0000000000]
+  [ 0.5000000000,  0.4522670169,  0.0836242010,  1.2403473459]
+
+Verification  ||L L^T - A||_max = 4.441e-16   ->  factorisation exact to round-off
+
+Guard rails (both must raise ValueError):
+  non-symmetric input : ValueError -> Matrix A is not symmetric; Cholesky requires symmetry.
+  non-positive-definite input : ValueError -> Matrix A is not positive-definite (non-positive pivot at index 0).

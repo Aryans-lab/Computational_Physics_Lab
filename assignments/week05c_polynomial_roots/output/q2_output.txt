@@ -1,0 +1,30 @@
+P1(x) = x^4 - x^3 - 7x^2 + x + 6
+                root  iterations  |P(root)|
+      1.000000000000           1    0.000e+00
+     -1.000000000000           5    2.780e-13
+     -2.000000000000           2    4.130e-13
+      3.000000000000           0    2.842e-13
+
+P2(x) = x^4 - 5x^2 + 4
+                root  iterations  |P(root)|
+      1.000000000000           1    0.000e+00
+      1.999999999799           3    2.410e-09
+     -0.999999999197           2    4.820e-09
+     -2.000000000602           0    7.230e-09
+
+P3(x) = 2x^5 - 19.5x^3 + 0.5x^2 + 13.5x - 4.5
+                root  iterations  |P(root)|
+      0.500017474525           9    8.016e-09
+      0.499982525306           2    8.016e-09
+     -0.999999999777           4    8.015e-09
+     -3.000000000027           2    8.015e-09
+      2.999999999973           0    8.017e-09
+
+Remarks:
+  * P1 and P2 factor over the integers: P1 = (x-1)(x+1)(x+2)(x-3),
+    P2 = (x-1)(x+1)(x-2)(x+2).  The roots are recovered to ~1e-10.
+  * P3 has a double root at x = 0.5:  P3 = 2(x-3)(x+3)(x+1)(x-0.5)^2.
+    Multiple roots are harder — convergence degrades from cubic to
+    linear — so the two deflated roots split around 0.5 as
+    0.49998 / 0.50002.  This is the expected behaviour of the
+    method, not an accuracy failure.

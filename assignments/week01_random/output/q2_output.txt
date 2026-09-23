@@ -1,0 +1,17 @@
+LCG: x_{i+1} = (1103515245 * x_i + 12345) mod 32768  (GCC parameters)
+Seed: 1 (x_0 = 1.2 truncated), N = 2000, lag k = 5
+
+Full-period check (Hull-Dobell, m = 2^15):
+  a == 1 (mod 4)      : True
+  c odd               : True
+  m a power of two    : True
+  => period = m = 32768 (verified in the test suite)
+
+Sample mean = 0.504826   (exact 0.5)
+Sample variance = 0.086599   (exact 1/12 = 0.083333)
+
+Correlation plot (x_i vs x_{i+5}) shows the known lattice structure
+of low-bit LCGs — acceptable for these physics simulations, but a
+modern PRNG (xorshift/PCG) would scatter the points uniformly.
+
+Figure: figures/q2_correlation_lcg.png

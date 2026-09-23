@@ -1,0 +1,9 @@
+Inverse-transform sampling: y = -(1/lambda) ln(u),  lambda = 1.0
+N = 5000 samples (seed = 1)
+
+sample mean   = 0.99976   (exact 1/lambda = 1.00000)
+sample stddev = 1.02197   (exact 1/lambda = 1.00000)
+For the exponential distribution the mean equals the standard deviation,
+a clean one-number check that the transformation worked.
+
+Figure: figures/q5_exponential_distribution.png

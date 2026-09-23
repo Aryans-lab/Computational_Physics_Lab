@@ -1,0 +1,16 @@
+Monte-Carlo pi: quarter circle of unit radius, seed = 1
+pi_est(N) = 4 * (points inside x^2 + y^2 <= 1) / N
+
+     N     pi estimate       |error|    ~1/sqrt(N)
+   100      3.12000000      2.16e-02      1.00e-01
+   250      3.10400000      3.76e-02      6.32e-02
+   500      3.12800000      1.36e-02      4.47e-02
+  1000      3.14000000      1.59e-03      3.16e-02
+  2500      3.11840000      2.32e-02      2.00e-02
+  5000      3.12720000      1.44e-02      1.41e-02
+
+Final estimate at N = 5000: 3.127200   (true pi = 3.141593)
+The scatter of the residuals traces the Central-Limit-Theorem bound
+sigma(pi_est) = 2/sqrt(N): halving the error requires 4x the throws.
+
+Figure: figures/q3_pi_estimate.png

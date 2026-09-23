@@ -1,0 +1,12 @@
+LU decomposition (Doolittle, partial pivoting) + forward-backward
+substitution for the 6x6 system (data/asgn3_mat1, data/asgn3_vec1).
+
+The solution of the system of linear equations is:
+  a1 = -1.7618170440
+  a2 = 0.8962280339
+  a3 = 4.0519314041
+  a4 = -1.6171308025
+  a5 = 2.0419135385
+  a6 = 0.1518324872
+
+residual ||Ax - b||_2 = 7.391e-15

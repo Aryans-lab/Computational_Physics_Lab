@@ -1,0 +1,14 @@
+Validation of the bracketing routines on f(x) = x^2 - 2,  root = sqrt(2)
+(bracket [1.0, 2.0], accuracy = 1e-10)
+
+bisection     : root = 1.414213562355  in  35 iterations
+                |f(root)| = 5.077e-11,   error = 1.795e-11
+regula falsi  : root = 1.414213562373  in  22 iterations
+                |f(root)| = 4.441e-16,   error = 2.220e-16
+
+Convergence-rate check (bisection halves the interval each step,):
+  iters for 1e-10 from a 1-wide bracket ~ log2(1/1e-10) = 33.2 -> 35
+
+Auto-bracketing demo: start from [3.0, 4.0] (no sign change)
+  bracket_root expanded to [-0.080000, 4.000000]
+  bisection on the expanded bracket: root = 1.414213562353

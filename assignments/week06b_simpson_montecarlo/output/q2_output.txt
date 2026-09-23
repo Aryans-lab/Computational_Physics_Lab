@@ -1,0 +1,21 @@
+Midpoint + Simpson 1/3, target error 1e-06 (from the error bounds)
+
+Integral: 1/x on [1, 2]   (exact = 0.6931471806)
+  derivative bounds: max|f''| = 2,  max|f''''| = 24
+  N from error bound (midpoint,    M2)  = 289
+  N from error bound (Simpson 1/3, M4)  = 20
+
+  Midpoint   (N =  289): 0.6931468064   |error| = 3.742e-07
+  Simpson 1/3 (N =   20): 0.6931473747   |error| = 1.941e-07   (21 function evaluations)
+
+Integral: x cos x on [0, pi/2]   (exact = 0.5707963268)
+  derivative bounds: max|f''| = 2.3,  max|f''''| = 4.2
+  N from error bound (midpoint,    M2)  = 610
+  N from error bound (Simpson 1/3, M4)  = 22
+
+  Midpoint   (N =  610): 0.5707970371   |error| = 7.103e-07
+  Simpson 1/3 (N =   22): 0.5707969873   |error| = 6.605e-07   (23 function evaluations)
+
+As expected for the same error target, Simpson needs far fewer
+subintervals (O(eps^{-1/4}) vs O(eps^{-1/2}) in N) — the O(h^4)
+rule pays off as soon as the integrand is C^4.

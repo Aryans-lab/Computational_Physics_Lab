@@ -1,6 +1,0 @@
-############################################
-# Output:
-# The root is in the interval [-2.0625, 5.53125]
-# The root is approximately -0.7390851332151607
-# The number of iterations taken is 22
-############################################

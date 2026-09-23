@@ -1,0 +1,18 @@
+1. Fixed-point iteration  (x = g(x))
+   f(x) = x^2 - 2x - 3,  rewrite x = sqrt(2x + 3),  x_0 = 1
+   root = 2.999999999974  in 23 iterations   (exact: 3)
+   |f(root)| = 1.042e-10
+
+2. Newton-Raphson, 1-D (analytical derivative)
+   f(x) = x^2 - 2,  x_0 = 2
+   root = 1.414213562373095  in 5 iterations   (exact sqrt(2) = 1.414213562373095)
+   absolute error = 0.000e+00
+   quadratic convergence: the digits of the root roughly double every
+   iteration (3 -> 6 -> 12 -> 14 significant digits here).
+
+3. Newton-Raphson, multivariate (numerical Jacobian, central differences)
+   F1 = 3x^2 - 2xy - 3,  F2 = 3y^2 - 4xy,  x_0 = (2.5, 3.1)
+   solution = (3.0000000000, 4.0000000000)  in 5 iterations   (exact: (3, 4))
+   max |F(x*)| = 7.105e-15
+   the Newton step solves J dx = F (Gauss-Jordan on [J | F]) instead of
+   inverting J explicitly — same step, better conditioning.

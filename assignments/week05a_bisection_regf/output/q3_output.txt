@@ -1,0 +1,16 @@
+Bracketing f(x) = -x - cos(x), starting interval [2.0, 3.0]
+(f(2) = -1.5839, f(3) = -2.0100 — no sign change)
+
+after automatic expansion: the root is in the interval [-1.080000, 3.000000]
+(expansion pushes out the side with the smaller |f|, growing the step
+ by 10% each push, until f(a) and f(b) have opposite signs)
+
+Regula Falsi on the bracketed interval (accuracy = 1e-8):
+   the root is approximately -0.739085133215
+   the number of iterations taken is 100
+   |f(root)| = 1.110e-16
+   error vs high-accuracy reference = 3.109e-15
+
+f is monotone (f' = -1 + sin x <= 0), so the bracket contains exactly
+one root — the negative one, near -0.739 (the other root of
+-x = cos(x) is at +0.739 and lies outside the expanded interval).

@@ -1,0 +1,10 @@
+Integral of e^{-x} x^4 from 0 to infinity  (3-point Gauss-Laguerre)
+
+x^4 is a polynomial of degree 4, and an n-node Gauss rule is exact
+for degrees <= 2n - 1.  With n = 3 that ceiling is 5 >= 4, so the
+rule must reproduce the exact answer 4! = 24 with zero error.
+
+Gauss-Laguerre (N = 3) = 23.999999999999925
+analytical value (4!)  = 24.0
+difference             = 7.461e-14
+relative error         = 3.109e-15

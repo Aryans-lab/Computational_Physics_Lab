@@ -1,191 +1,175 @@
-# Computational Physics & Scientific Computing Suite
+# Computational Physics — a First-Principles Numerical Workbench
 
+[![CI](https://github.com/Aryans-lab/Computational_Physics_Lab/actions/workflows/ci.yml/badge.svg)](https://github.com/Aryans-lab/Computational_Physics_Lab/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![NISER Bhubaneswar](https://img.shields.io/badge/NISER-Physics-green.svg)](https://www.niser.ac.in)
-[![Dependencies](https://img.shields.io/badge/Dependencies-Zero%20(Pure%20Stdlib)-brightgreen.svg)](#design-philosophy)
+[![Core](https://img.shields.io/badge/core-pure%20stdlib%20Python-brightgreen.svg)](#design-philosophy)
 
-**Author:** [Aryan Bandyopadhyay](https://github.com/Aryans-lab)  
-**Affiliation:** School of Physical Sciences, National Institute of Science Education and Research (NISER), Bhubaneswar  
-**Course Reference:** PHY341 / PHY745 — Computational Physics  
+Every numerical routine in this repository — matrix factorisation, iterative
+relaxation, non-linear root finding, polynomial deflation, and
+Gaussian quadrature — is implemented **from first principles in pure
+standard-library Python**. No `numpy`, no `scipy`, no black boxes: the point
+is to *see* the linear algebra, the floating-point behaviour, and the error
+bounds working. NumPy and Matplotlib appear only where they belong —
+plotting, and an independent reference in the test suite.
 
----
+The work grew out of the computational physics coursework at NISER
+(PHY341/745, 2025–26) and has since been organised into a single,
+reproducible workbench: one canonical library, one driver per problem,
+golden outputs committed to git, a unit-test + regression suite, and CI.
 
-## Overview & Design Philosophy
-
-This repository is a self-contained scientific computing library and computational physics workbench implemented **entirely from first principles in pure Python**. 
-
-Rather than relying on black-box numerical packages (`scipy`, `numpy.linalg`, or standard library `random`), every core algorithm—from matrix factorization and iterative relaxation to multidimensional root finding, orthogonal polynomial deflation, and spectral Gaussian quadrature—is built from scratch.
-
-### Core Architectural Pillars
-- **Zero Heavy Numerical Dependencies:** Algorithms are implemented in native standard library Python to expose the underlying linear algebra, floating-point mechanics (IEEE 754), condition numbers, and error bounds.
-- **Central Scientific Engine (`mylib.py`):** A unified, modular library exposing direct solvers, iterative solvers, non-linear optimizers, polynomial roots, and quadrature routines.
-- **Verification by Residuals:** Every linear solver and root finder is validated through formal numerical diagnostics ($\|Ax - b\|_2 \approx 10^{-16}$, analytical comparison, step-size convergence).
-- **Physical Simulations:** Direct applications to decay chains, stochastic sampling, phase-space dynamics, and boundary value problems.
+**Author:** Aryan Bandyopadhyay — [github.com/Aryans-lab](https://github.com/Aryans-lab)
 
 ---
 
-## Visual Gallery & Selected Simulations
-
-### 1. Stochastic Physics: Radioactive Decay Kinetics ($A \to B \to C$)
-Monte Carlo simulation of consecutive radioactive decays governed by coupled differential equations $dN_A/dt = -\lambda_A N_A$, $dN_B/dt = \lambda_A N_A - \lambda_B N_B$, $dN_C/dt = \lambda_B N_B$. Individual atomic decay decisions are simulated using transition probabilities $P = \lambda \Delta t$ via a custom LCG pseudo-random number generator without continuous ODE approximations.
-
-<p align="center">
-  <img src="assign1_rand/radioactive_simulation.png" alt="Radioactive Decay Simulation" width="750"/>
-</p>
-
-### 2. Monte Carlo Integration & Statistical Error Scaling ($O(N^{-1/2})$)
-Evaluation of definite integrals and fundamental constants ($\pi$) via uniform Monte Carlo sampling. The empirical standard deviation and residual error closely trace the theoretical Central Limit Theorem scaling of $\sigma_I = (b - a) \sigma_f / \sqrt{N}$.
-
-<p align="center">
-  <img src="assign1_rand/pi_estimate_residual.png" alt="Pi Estimation Residual Error" width="48%"/>
-  <img src="assign6b_simmc/deviation_vs_N.png" alt="Monte Carlo Error vs N" width="48%"/>
-</p>
-<p align="center">
-  <img src="assign6b_simmc/integral_vs_N.png" alt="Monte Carlo Integral Convergence" width="700"/>
-</p>
-
-### 3. Non-Uniform Sampling & Correlation Analysis
-- **Inverse Transform Method:** Generation of exponential deviates $q(y) = \lambda e^{-\lambda y}$ via $y = -\frac{1}{\lambda} \ln(u)$ benchmarked against exact distributions.
-- **Phase Space & Lag Correlations:** Correlation testing $x_i$ vs $x_{i+k}$ comparing non-linear chaotic mappings ($x_{i+1} = c x_i (1 - x_i)$) with full-period Linear Congruential Generators (Hull-Dobell satisfied).
-
-<p align="center">
-  <img src="assign1_rand/exponential_distribution.png" alt="Exponential Distribution Histogram" width="48%"/>
-  <img src="assign1_rand/correlation_Question2.png" alt="LCG Correlation Plot" width="48%"/>
-</p>
-
----
-
-## Numerical Algorithms Blueprint (`mylib.py`)
-
-The heart of this repository is [`mylib.py`](mylib.py), structured into modular mathematical disciplines:
+## What's inside
 
 ```
-mylib.py
-├── 1. Pseudo-Random Number Generation & Distributions (LCG, Uniform, Exponential)
-├── 2. Complex Numbers & Vector Algebra (MyComplex, Vector Norms, Dot Products)
-├── 3. Matrix Utilities & Non-Interactive File I/O (I/O, Transpose, Residuals, Verification)
-├── 4. Direct Linear Solvers (Gauss-Jordan, Matrix Inversion, Doolittle LU, Determinants)
-├── 5. Symmetric Positive-Definite Systems (Cholesky Factorization & Solver)
-├── 6. Iterative Linear Solvers (Jacobi, Gauss-Seidel, Successive Over-Relaxation)
-├── 7. Non-Linear Root Finding (Bisection, Regula Falsi, Fixed-Point, 1D & Multivariate Newton-Raphson)
-├── 8. Polynomial Solvers & Deflation (Horner's Scheme, Laguerre's Method, Synthetic Division)
-└── 9. Numerical Integration & Quadrature (Midpoint, Trapezoidal, Simpson 1/3, Monte Carlo, Gauss-Legendre, Gauss-Laguerre)
+.
+├── mylib.py                  # the whole numerical library (pure stdlib)
+├── assignments/              # one self-contained folder per course week
+│   ├── week00_warmup/        #   Python fundamentals, MyComplex, matrix I/O
+│   ├── week01_random/        #   LCG PRNG, π, decay chains, exponential sampling
+│   ├── week02_gauss_jordan_lu/  # Gauss-Jordan, inversion, Doolittle LU
+│   ├── week03_lu_cholesky/   #   LU forward-backward, Cholesky
+│   ├── week04_jacobi_gs/     #   Jacobi, Gauss-Seidel, SOR
+│   ├── week05a_bisection_regf/  # bracketing: bisection, regula falsi
+│   ├── week05b_fixedpoint_newton/  # fixed-point, Newton (1-D & multivariate)
+│   ├── week05c_polynomial_roots/   # Laguerre's method + synthetic deflation
+│   ├── week06a_midpoint_trapezoid/  # closed Newton-Cotes rules
+│   ├── week06b_simpson_montecarlo/  # Simpson's 1/3, Monte Carlo quadrature
+│   └── week06c_gaussian_quadrature/ # Gauss-Legendre & Gauss-Laguerre
+│       (each: questionN.py + data/ + output/ + figures/ + mylib.py)
+├── tests/                    # unit tests + golden-output regression
+├── scripts/                  # bundle.py, run_all.py
+├── Makefile                  # make all = bundle + run + lint + test
+└── .github/workflows/ci.yml  # Python 3.10 & 3.12
 ```
 
-### Module Summary & Analytical Properties
+### The design rule (and why it matters)
 
-| Module / Method | Mathematical Foundation | Order / Complexity | Key Feature / Constraint |
+The course convention this project was built under: **all numerical
+routines live in `mylib.py` in the same directory as the front code; front
+code does I/O only; no NumPy/SciPy in the core.** The rule is preserved
+exactly — `mylib.py` at the repository root is the single source of truth,
+and `scripts/bundle.py` copies it verbatim into every week folder, so each
+folder remains independently submittable and runnable.
+
+### Verification, not faith
+
+- Every linear solver is checked by residual: `‖Ax − b‖₂ ≈ 1e-12–1e-16`
+- LU is reassembled as `L·U` and compared to `P·A`; determinants are
+  cross-checked against the permutation sign
+- Convergence orders are measured empirically (error ratios on doubling `N`)
+- The Gaussian tables are checked against NumPy's independently computed
+  nodes/weights
+- The LCG's full period of 2¹⁵ is enumerated
+- `tests/test_assignments.py` re-runs **all 36 drivers** in a sandbox and
+  byte-compares the regenerated outputs against the committed ones — the
+  numbers in `output/` are exactly what the current code produces
+
+## The library at a glance
+
+| Method | Mathematics | Order / cost | Notable guard-rails |
 |---|---|---|---|
-| **LCG (`myrand`)** | $x_{i+1} = (a x_i + c) \pmod m$ | $O(1)$ | Full cycle ($m = 32768, a = 1103515245, c = 12345$) |
-| **Gauss-Jordan** | $[A \mid b] \xrightarrow{\text{RREF}} [I \mid x]$ | $O(n^3)$ | Partial row pivoting; detects singularity & inconsistency |
-| **LU Decomposition** | $A = L U$ (Doolittle: $L_{ii} = 1$) | $O(\frac{2}{3} n^3)$ | Forward-backward substitution; $\det(A) = \prod U_{ii}$ free |
-| **Cholesky Factorization** | $A = L L^T$ | $O(\frac{1}{3} n^3)$ | $2\times$ faster than LU; verifies symmetry & positive definiteness |
-| **Jacobi Iteration** | $x^{(k+1)} = D^{-1} [b - (L+U) x^{(k)}]$ | Iterative | Decoupled updates; easily parallelizable; diagonal dominance |
-| **Gauss-Seidel** | $x_i^{(k+1)} = \frac{1}{A_{ii}} [b_i - \sum_{j < i} A_{ij} x_j^{(k+1)} - \sum_{j > i} A_{ij} x_j^{(k)}]$ | Iterative | Sequential in-place updates; faster spectral radius convergence |
-| **SOR** | $x^{(k+1)} = (1 - \omega) x^{(k)} + \omega x_{GS}^{(k+1)}$ | Iterative | Tunable $\omega \in (1, 2)$ accelerates convergence by up to $6\times$ |
-| **Bisection & Regula Falsi** | Intermediate Value Theorem | Linear / Superlinear | Auto-bracketing outward expansion; guaranteed convergence |
-| **1D Newton-Raphson** | $x_{n+1} = x_n - f(x_n) / f'(x_n)$ | Quadratic ($O(e_n^2)$) | Supports analytical $f'(x)$ or $O(h^2)$ central differences |
-| **Multivariate Newton-Raphson** | $x^{(k+1)} = x^{(k)} - [J(x^{(k)})]^{-1} F(x^{(k)})$ | Quadratic | Computes numerical Jacobian $J \in \mathbb{R}^{n \times n}$ & inverts via GJ |
-| **Laguerre's Method** | $a = n / [G \pm \sqrt{(n-1)(nH - G^2)}]$ | Cubic near simple roots | Isolates complex/real roots; paired with synthetic deflation |
-| **Simpson's 1/3-Rule** | Piecewise quadratic interpolation | Error $O(h^4) \sim \frac{(b-a)^5}{180 N^4} M_4$ | Requires even $N$; high precision on smooth integrands |
-| **Monte Carlo Quadrature** | $I \approx (b - a) \langle f \rangle$ | Error $O(N^{-1/2})$ | Dimension-independent convergence; ideal for multi-variable integrals |
-| **Gaussian Quadrature** | $\int w(x) f(x) dx \approx \sum w_i f(x_i)$ | Exact for $\deg(P) \le 2N - 1$ | **Legendre:** on $[-1, 1]$; **Laguerre:** on $[0, \infty)$ with weight $e^{-x}$ |
+| **LCG** `myrand` | $x_{k+1} = (a x_k + c) \bmod m$ | $O(1)$ | Hull-Dobell parameters; full period $m = 2^{15}$ verified |
+| **Gauss-Jordan** | $[A\mid b] \to [I \mid x]$ via RREF | $O(n^3)$ | scale-relative pivoting; distinguishes inconsistent vs dependent vs non-square |
+| **LU (Doolittle)** | $PA = LU$, unit lower $L$ | $O(\tfrac{2}{3}n^3)$ | partial pivoting; $P$ tracked as a permutation; zero-pivot detection |
+| **Cholesky** | $A = LL^T$ | $O(\tfrac{1}{3}n^3)$ | symmetry + positive-definiteness checked before factoring |
+| **Jacobi / G-S / SOR** | stationary / over-relaxed iteration | spectral radius $\rho < 1$ | diagonal dominance checked; SOR tuned ($\omega = 1.57$ on the Poisson model) |
+| **Bisection / Regula Falsi** | IVT bracketing | linear / superlinear | automatic bracket *expansion* when the given interval has no sign change |
+| **Fixed point** | $x = g(x)$, $\lVert g' \rVert < 1$ | linear | iteration-count reporting for rate analysis |
+| **Newton (1-D, N-D)** | $x_{k+1} = x_k - f/f'$; $J\,\delta x = -F$ | quadratic | analytic *or* central-difference derivatives; N-D step solved by GJ, never by inverting $J$ |
+| **Laguerre + deflation** | $a = \dfrac{n}{G \pm \sqrt{(n-1)(nH - G^2)}}$ | cubic near simple roots | real-roots-only by design; double roots degrade gracefully (0.49998 / 0.50002) |
+| **Midpoint / Trapezoid** | closed Newton-Cotes | $O(h^2)$ | error-bound solver for minimal $N$ |
+| **Simpson 1/3** | piecewise quadratics | $O(h^4)$ | even-$N$ enforcement; evaluation count reported |
+| **Monte Carlo** | $I \approx (b-a)\langle f\rangle$ | $O(N^{-1/2})$ | seeded (reproducible); returns $\sigma_f$ and $\sigma_I$ |
+| **Gauss-Legendre / Laguerre** | $\sum w_i f(x_i)$, orthogonal nodes | exact for $\deg \le 2n-1$ | one routine, two families; tables for $n = 1\dots 6$; $[0,\infty)$ with weight $e^{-x}$ |
 
----
+The full API map lives in [`mylib.py`](mylib.py)'s module docstring.
 
-## Detailed Topic Directory
+## Selected results
 
-Each folder represents an in-depth module featuring driver scripts, test matrices, numerical outputs, and plots:
+### Radioactive decay, $A \to B \to C$ (week01)
+Monte Carlo of consecutive decays, each nucleus deciding by
+$P = \lambda\,\Delta t$ — no ODE solver, pure counting statistics.
 
-- [`Assgn0/`](Assgn0/): **Foundational Numerics & Matrix Mechanics**
-  - Custom `MyComplex` arithmetic class, summation of non-trivial series without analytical shortcuts, ASCII matrix I/O routines.
-- [`assign1_rand/`](assign1_rand/): **Stochastic Methods, PRNGs, & Decay Chains**
-  - LCG engine, Hull-Dobell theorem validation, lag correlation plots, Monte Carlo $\pi$ estimation, radioactive decay series ($A \to B \to C$), and exponential sampling.
-- [`assign2_gj_lu/`](assign2_gj_lu/): **Direct Linear Solvers: Gauss-Jordan & Doolittle LU**
-  - Row pivoting, non-singular condition monitoring, matrix inversion, and $L \cdot U$ verification.
-- [`assign3_lu_chsk/`](assign3_lu_chsk/): **Forward-Backward Substitution & Cholesky Factorization**
-  - Solving $6 \times 6$ linear systems via forward ($Ly = b$) and backward ($Ux = y$) substitution, Cholesky decomposition of symmetric positive-definite systems.
-- [`assign4_jac_gs/`](assign4_jac_gs/): **Stationary Iterative Methods & Spectral Acceleration**
-  - Jacobi vs. Gauss-Seidel convergence dynamics, diagonal dominance transformations, and Successive Over-Relaxation (SOR) with $\omega = 1.57$.
-- [`assign5_bi_rf/`](assign5_bi_rf/): **Root Finding: Bisection & Regula Falsi**
-  - Automated bracketing routines and transcendental equation root solving with rigorous error tolerance.
-- [`assign5_fx_nr/`](assign5_fx_nr/): **Fixed-Point Iteration & Multidimensional Newton-Raphson**
-  - Picard iteration $|g'(x)| < 1$, convergence rate comparisons (Bisection vs. Regula Falsi vs. Newton), and non-linear coupled systems using numerical Jacobians.
-- [`assign5_poly/`](assign5_poly/): **Polynomial Roots: Horner, Laguerre, & Synthetic Deflation**
-  - $O(n)$ polynomial evaluation and derivative tracking, Laguerre root isolation, and synthetic division deflation.
-- [`assign6_midtrap/`](assign6_midtrap/): **Closed Newton-Cotes Quadrature**
-  - Composite Midpoint and Trapezoidal integration rules with analytical error benchmarks.
-- [`assign6b_simmc/`](assign6b_simmc/): **Simpson's Rule & Monte Carlo Quadrature**
-  - $O(h^4)$ Simpson integration, theoretical $N$ selection from fourth derivative bounds, and Monte Carlo variance tracking.
-- [`assign6c_gq/`](assign6c_gq/): **Orthogonal Polynomial Quadrature (Gauss-Legendre & Gauss-Laguerre)**
-  - Unified Gaussian quadrature for finite and semi-infinite intervals ($[0, \infty)$) with tabulated roots and weights ($N = 1$ to $6$).
+<p align="center">
+  <img src="assignments/week01_random/figures/q4_radioactive_decay.png" alt="Radioactive decay chain" width="700"/>
+</p>
 
----
+### Monte Carlo quadrature and the $O(N^{-1/2})$ law (week06b)
+$\int_{-1}^{1} \sin^2 x\,dx$ with the in-house LCG: the estimate wanders
+inside its standard error, and the deviation plot is the textbook
+fluctuation band that deterministic rules never show.
 
-## Quickstart & Usage
+<p align="center">
+  <img src="assignments/week06b_simpson_montecarlo/figures/q3_integral_vs_N.png" alt="Monte Carlo integral vs N" width="48%"/>
+  <img src="assignments/week06b_simpson_montecarlo/figures/q3_deviation_vs_N.png" alt="Monte Carlo deviation vs N" width="48%"/>
+</p>
 
-### 1. Solving a Linear System ($Ax = b$) with Verification
+### π by Monte Carlo, with the residual (week01)
+
+<p align="center">
+  <img src="assignments/week01_random/figures/q3_pi_estimate.png" alt="Pi estimate" width="700"/>
+</p>
+
+### SOR acceleration (week04)
+On the 10×10 Poisson model problem, Gauss-Seidel needs 339 iterations at
+$\text{tol} = 10^{-12}$; SOR with $\omega = 1.57$ — the analytic optimum for
+this geometry — does it in 58.
+
+## Quickstart
+
+```bash
+# everything: bundle the library, run all 36 drivers, lint, test
+make all
+
+# or piecewise:
+python scripts/bundle.py        # mylib.py -> every week folder (idempotent)
+python scripts/run_all.py       # run every question*.py, report ok/FAIL
+python -m pytest tests -q       # unit tests + golden-output regression
+```
+
+Any single driver runs with zero arguments from anywhere:
+
+```bash
+python assignments/week02_gauss_jordan_lu/question2.py
+# Output written to: .../week02_gauss_jordan_lu/output/q2_output.txt
+```
+
+### Using the library
+
 ```python
-from mylib import lu_forback, matrix_residual, print_matrix
+from mylib import lu_forback, matrix_residual, laguerre_roots, gaussian_quadrature
 
-A = [
-    [4.0, 1.0, -1.0],
-    [1.0, 4.0, -1.0],
-    [-1.0, -1.0, 5.0]
-]
+# 1. solve a linear system and verify the residual
+A = [[4.0, 1.0, -1.0], [1.0, 4.0, -1.0], [-1.0, -1.0, 5.0]]
 b = [6.0, 25.0, -11.0]
+x = lu_forback(A, b)                      # Doolittle LU, partial pivoting
+print(matrix_residual(A, x, b))           # ~1e-16
 
-# Solve via LU decomposition (Doolittle)
-x = lu_forback(A, b, method='lu')
-print_matrix(x, label="Solution Vector x")
+# 2. all real roots of x^4 - x^3 - 7x^2 + x + 6
+roots, iters = laguerre_roots([1, -1, -7, 1, 6], b0=1.0)
+print(roots)                              # ~ [-2, -1, 1, 3]
 
-# Verify numerical integrity via residual norm ||Ax - b||_2
-res = matrix_residual(A, x, b)
-print(f"Residual Norm: {res:.2e}")  # Typically ~ 1e-16
+# 3. one quadrature routine, two orthogonal families
+f = lambda x: x * x / (1.0 + x ** 4)
+print(gaussian_quadrature(f, -1, 1, N=4, method="legendre"))   # 0.48163548...
+print(gaussian_quadrature(lambda x: 1.0/(1.0+x), 0, 0, N=5,
+                          method="laguerre"))                  # 0.595084...
 ```
 
-### 2. Finding All Real Roots of a High-Degree Polynomial
-```python
-from mylib import laguerre_roots
+## Coursework context
 
-# P(x) = x^4 - x^3 - 7x^2 + x + 6 = 0
-coefficients = [1, -1, -7, 1, 6]
-
-roots, iterations = laguerre_roots(coefficients, b0=1.0)
-for i, (r, it) in enumerate(zip(roots, iterations)):
-    print(f"Root {i+1}: {r:10.6f} (found in {it} iterations)")
-# Output: 1.0, -1.0, -2.0, 3.0
-```
-
-### 3. Comparing Simpson's Rule vs. Gauss-Legendre Quadrature
-```python
-import math
-from mylib import simpson, gaussian_quadrature
-
-f = lambda x: x**2 / (1.0 + x**4)
-a, b = -1.0, 1.0
-
-# 4-point Gauss-Legendre achieves near machine accuracy
-val_gq = gaussian_quadrature(f, a, b, N=4, method='legendre')
-
-# Simpson 1/3 requires N >= 20 for equivalent accuracy
-val_simp, evals = simpson(f, a, b, N=20)
-
-print(f"Gauss-Legendre (N=4):  {val_gq:.9f}")
-print(f"Simpson 1/3   (N=20): {val_simp:.9f} ({evals} evaluations)")
-```
-
----
-
-## Author & Academic Context
-
-Developed by **Aryan Bandyopadhyay** (`2411014`), 3rd-year Integrated M.Sc. Physics student at the **National Institute of Science Education and Research (NISER)**, Bhubaneswar.
-
-For an exhaustive technical breakdown of course requirements, examination criteria, and algorithmic mechanics, see [`COURSE_CONTEXT.md`](COURSE_CONTEXT.md).
-
----
+This repository is the worked set for **PHY341/745 (Computational Physics)**,
+School of Physical Sciences, NISER Bhubaneswar — 2025–26. Each
+`assignments/weekNN_*/` folder is a complete, self-contained submission
+(driver scripts, input data, committed outputs, figures, and its own copy of
+`mylib.py`), so the folders can be read or submitted exactly as the course
+prescribed; the test suite, CI, and bundling layer are the additions that
+turn the coursework into a maintained project.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT](LICENSE)

@@ -4,19 +4,20 @@ question2.py
 Problem : Calculate the sum of N terms of a Geometric Progression (GP) and
           a Harmonic Progression (HP). All parameters are read from an
           external input file.  Closed-form formulae are NOT used.
-Usage   : python question2.py <input_file> <output_file>
-          e.g.: python question2.py data/q2_input.txt output/q2_output.txt
+Usage   : python question2.py [input_file] [output_file]
+          Defaults: data/q2_input.txt -> output/q2_output.txt (relative to
+          this script), so the script runs from anywhere with no arguments.
 Input file format (one value per line, comments with # are ignored):
     N    - number of terms
     t0   - first term
     r    - common ratio (GP)
     d    - common difference of the underlying AP (HP)
 Author  : Aryan Bandyopadhyay
-Roll No.: 2411014
 Course  : PHY341/745 - Physics Computer Lab, NISER
 """
 
 import sys
+from pathlib import Path
 
 
 def sum_gp(n: int, first: float, ratio: float) -> float:
@@ -46,18 +47,14 @@ def sum_hp(n: int, first: float, diff: float) -> float:
 
 
 def main() -> None:
-    # -- Argument check
-    if len(sys.argv) != 3:
-        print("Usage: python question2.py <input_file> <output_file>",
-              file=sys.stderr)
-        sys.exit(1)
-
-    input_file  = sys.argv[1]
-    output_file = sys.argv[2]
+    base = Path(__file__).resolve().parent
+    args = sys.argv[1:]
+    input_file  = args[0] if len(args) >= 1 else str(base / "data" / "q2_input.txt")
+    output_file = args[1] if len(args) >= 2 else str(base / "output" / "q2_output.txt")
 
     # -- Read parameters from file (skip comment lines)
     values = []
-    with open(input_file, "r") as f:
+    with open(input_file) as f:
         for line in f:
             stripped = line.strip()
             if stripped and not stripped.startswith("#"):

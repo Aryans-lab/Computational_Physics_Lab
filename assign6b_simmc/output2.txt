@@ -1,9 +1,0 @@
-Output:
-
-Integral of 1/x from 1 to 2
-Midpoint = 0.6931468064035278
-Simpson = 0.6931473746651161 with function evaluations = 21
-
-Integral of x*cos(x) from 0 to pi/2
-Midpoint = 0.5707970370864699
-Simpson = 0.570796987316687 with function evaluations = 23

@@ -1,0 +1,17 @@
+Cholesky factorisation A = L L^T  +  forward/backward substitution
+(data/asgn3_mat2, data/asgn3_vec2)
+
+The Cholesky factorisation of the matrix A is:
+  [ 2.0000000000,  0.0000000000,  0.0000000000,  0.0000000000]
+  [ 0.5000000000,  1.6583123952,  0.0000000000,  0.0000000000]
+  [ 0.5000000000, -0.7537783614,  1.0871146130,  0.0000000000]
+  [ 0.5000000000,  0.4522670169,  0.0836242010,  1.2403473459]
+
+The solution of the system of linear equations is:
+  a1 = 0.000000000000
+  a2 = 1.000000000000
+  a3 = 1.000000000000
+  a4 = 1.000000000000
+
+residual ||Ax - b||_2 = 4.441e-16
+exact solution is x = (0, 1, 1, 1) — recovered to machine precision

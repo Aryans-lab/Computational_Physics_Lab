@@ -1,0 +1,8 @@
+# Visualization + verification tooling.
+# The numerical core (mylib.py) itself is pure standard library.
+matplotlib>=3.7
+numpy>=1.24
+
+# Development / CI
+pytest>=7.0
+ruff>=0.4

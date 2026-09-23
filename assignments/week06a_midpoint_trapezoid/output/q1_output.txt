@@ -1,0 +1,14 @@
+Validation of midpoint & trapezoidal rules on int_1^2 (1/x) dx = ln 2
+exact value = 0.693147180560
+
+    N          midpoint        error         trapezoid        error   mid ratio   trap ratio
+    1      0.6666666667    2.648e-02      0.7500000000    5.685e-02           -            -
+    2      0.6857142857    7.433e-03      0.7083333333    1.519e-02       0.281        0.267
+    4      0.6912198912    1.927e-03      0.6970238095    3.877e-03       0.259        0.255
+    8      0.6926605540    4.866e-04      0.6941218504    9.747e-04       0.252        0.251
+   16      0.6930252143    1.220e-04      0.6933912022    2.440e-04       0.251        0.250
+
+error-ratio column: ~0.25 (= 1/4) on doubling N — the O(h^2) = O(1/N^2)
+order of both rules, exactly as the error bounds promise:
+  midpoint:    |E| <= (b-a)^3 / (24 N^2) * max|f''|
+  trapezoidal: |E| <= (b-a)^3 / (12 N^2) * max|f''|

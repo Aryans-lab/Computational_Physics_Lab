@@ -1,0 +1,8 @@
+Logistic map x_{i+1} = c x_i (1 - x_i), x_0 = 0.1, N = 1000
+Correlation plots x_i vs x_{i+k}, k = 3, 5, 10 (see figures/).
+
+Parameters studied: c = 3.85, 3.95, 4.0
+  c = 3.85, 3.95: chaotic but with visible lag structure at small k.
+  c = 4.0       : fully chaotic; successive iterates decorrelate fast.
+
+Figure: figures/q1_correlation_chaos.png

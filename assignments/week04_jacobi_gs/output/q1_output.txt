@@ -1,0 +1,16 @@
+Iterative solvers benchmark (tol = 1e-8, max |dx| stopping test)
+System: 6x6 from data/asgn4_mat1 / data/asgn4_vec1
+strictly diagonally dominant: True  (guarantees convergence of Jacobi and Gauss-Seidel)
+
+method                 iterations   residual ||Ax-b||_2  solution
+Jacobi                         37             2.948e-08  [1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000]
+Gauss-Seidel                   20             1.370e-08  [1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000]
+SOR (omega = 1.3)              18             6.825e-09  [1.000000, 1.000000, 1.000000, 1.000000, 1.000000, 1.000000]
+
+Notes:
+  * Jacobi updates every component from the previous iterate only,
+    so the sweep is embarrassingly parallel.
+  * Gauss-Seidel reuses fresh values in-place: typically ~2x fewer
+    iterations on this system.
+  * SOR with 1 < omega < 2 accelerates further; omega is tuned per
+    problem (question3.py studies omega = 1.57 on a Poisson model).

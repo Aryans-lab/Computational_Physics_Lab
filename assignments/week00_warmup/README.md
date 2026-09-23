@@ -129,20 +129,18 @@ week00_warmup/
 
 ## Running the Scripts
 
+Every script resolves its paths relative to itself, so it runs from
+anywhere with **no arguments** (defaults: `data/...` in, `output/qN_output.txt` out):
+
 ```bash
-# from repo root:
-python assignments/week00_warmup/question1.py \
-    assignments/week00_warmup/data/q1_input.txt \
-    assignments/week00_warmup/output/q1_output.txt
+python assignments/week00_warmup/question1.py
+python assignments/week00_warmup/question2.py
+python assignments/week00_warmup/question3.py
+python assignments/week00_warmup/question5.py
+```
 
-python assignments/week00_warmup/question2.py \
-    assignments/week00_warmup/data/q2_input.txt \
-    assignments/week00_warmup/output/q2_output.txt
+Explicit input/output paths are still accepted as positional arguments:
 
-python assignments/week00_warmup/question3.py \
-    assignments/week00_warmup/output/q3_output.txt
-
-python assignments/week00_warmup/question5.py \
-    assignments/week00_warmup/data/q5_input.txt \
-    assignments/week00_warmup/output/q5_output.txt
+```bash
+python assignments/week00_warmup/question1.py my_input.txt my_output.txt
 ```

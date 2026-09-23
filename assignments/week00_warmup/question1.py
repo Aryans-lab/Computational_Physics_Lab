@@ -4,14 +4,15 @@ question1.py
 Problem : Compute the sum of the first N even numbers and the factorial of M,
           where N and M are read from an external input file.
           Uses an explicit loop -- no math.factorial or built-in sum().
-Usage   : python question1.py <input_file> <output_file>
-          e.g.: python question1.py data/q1_input.txt output/q1_output.txt
+Usage   : python question1.py [input_file] [output_file]
+          Defaults: data/q1_input.txt -> output/q1_output.txt (relative to
+          this script), so the script runs from anywhere with no arguments.
 Author  : Aryan Bandyopadhyay
-Roll No.: 2411014
 Course  : PHY341/745 - Physics Computer Lab, NISER
 """
 
 import sys
+from pathlib import Path
 
 
 def sum_of_first_n_even_numbers(n: int) -> int:
@@ -31,18 +32,14 @@ def factorial(n: int) -> int:
 
 
 def main() -> None:
-    # -- Argument check
-    if len(sys.argv) != 3:
-        print("Usage: python question1.py <input_file> <output_file>",
-              file=sys.stderr)
-        sys.exit(1)
-
-    input_file  = sys.argv[1]
-    output_file = sys.argv[2]
+    base = Path(__file__).resolve().parent
+    args = sys.argv[1:]
+    input_file  = args[0] if len(args) >= 1 else str(base / "data" / "q1_input.txt")
+    output_file = args[1] if len(args) >= 2 else str(base / "output" / "q1_output.txt")
 
     # -- Read N and M from file (skip comment lines starting with #)
     values = []
-    with open(input_file, "r") as f:
+    with open(input_file) as f:
         for line in f:
             stripped = line.strip()
             if stripped and not stripped.startswith("#"):

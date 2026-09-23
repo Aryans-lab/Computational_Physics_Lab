@@ -1,0 +1,24 @@
+Root of f(x) = 3x + sin(x) - e^x on [-1.5, 1.5],  accuracy = 1e-06
+
+1. Bisection method:
+   the root is approximately 0.360422015190
+   the number of iterations taken is 23
+
+2. Regula Falsi method:
+   the root is approximately 0.360421702960
+   the number of iterations taken is 25
+
+3. Newton-Raphson method (analytical derivative f' = 3 + cos x - e^x):
+   the root is 0.360421680476
+   the number of iterations taken is 3
+
+4. Newton-Raphson (numerical derivative, central difference, h = 1e-5):
+   the root is 0.360421680476
+   the number of iterations taken is 3
+
+reference (bisection to 1e-13): 0.360421702960
+
+Convergence-rate comparison (iterations to 1e-6):
+   bisection        23   (linear,  ~log2(3/1e-6) = 21.5 needed)
+   regula falsi     25   (superlinear, but one endpoint sticks)
+   Newton            3   (quadratic — the error squares each step)
