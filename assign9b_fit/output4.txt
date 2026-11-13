@@ -1,0 +1,15 @@
+1. Modified Chebyshev Basis Coefficients:
+  a0 = 1.160969
+  a1 = 0.393514
+  a2 = 0.046850
+  a3 = 0.239646
+
+2. Standard Monomial Coefficients:
+  a0 = 0.574659
+  a1 = 4.725861
+  a2 = -11.128218
+  a3 = 7.668678
+
+3. Condition Numbers Comparison:
+  Condition number (Standard Polynomial Hankel Matrix): 12195.8541
+  Condition number (Modified Chebyshev Matrix): 6.4041

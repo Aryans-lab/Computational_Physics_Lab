@@ -111,7 +111,50 @@ D:\NISER\Computational Physics Lab\
 │   ├── question3.py         (Gauss-Laguerre 5-point for integral_0^inf e^(-x)/(1 + x) dx)
 │   └── question4.py         (Gauss-Laguerre integration of x^4 * e^(-x) comparing to 4! = 24)
 │
-└── Slides\                  <-- Lecture notes (PDFs from SPS NISER)
+├── Midsem\                  <-- Mid-Semester Examination Suite
+│   ├── question1.py         (Ehrenfest particle diffusion simulation between two compartments)
+│   ├── question2.py         (Matrix inversion via Doolittle LU decomposition with det check)
+│   ├── question3.py         (Wien's displacement law root finding via Newton-Raphson)
+│   ├── question4.py         (Center of mass of non-uniform beam via composite midpoint rule)
+│   └── question5.py         (Ground state hydrogen <r> expectation value via Gauss-Legendre)
+│
+├── assign7a_fwbk\           <-- ODEs: Forward Euler, Backward Euler & Predictor-Corrector
+│   └── question1.py         (Comparative IVP solutions and step-size stability study)
+│
+├── assign7b_rk4\            <-- ODEs: Runge-Kutta 4th Order (RK4) Engine
+│   ├── q1.py                (Core RK4 library function verification for 1st/2nd order systems)
+│   ├── q2.py                (Solving dy/dx = (x+y)^2 against analytical tan(x + pi/4) - x)
+│   ├── q3.py                (Damped harmonic oscillator: trajectory, phase portrait, energy decay)
+│   └── q4.py                (3D chaotic Rössler attractor phase space evolution)
+│
+├── assign7c_sht\            <-- Two-Point Boundary Value Problems & FEM
+│   ├── question1.py         (Cantilever beam depression via Shooting Method with RK4)
+│   ├── question2.py         (Uninsulated rod heat conduction with convective ambient cooling)
+│   └── question3.py         (1D Poisson equation BVP via Finite Element Method & Cholesky)
+│
+├── assign7d_felem\          <-- Partial Differential Equations (PDEs)
+│   ├── question1.py         (1D Heat equation via explicit FTCS scheme with stability analysis)
+│   └── question2.py         (Generalized parabolic convection-diffusion via Crank-Nicolson)
+│
+├── assign8_eval\            <-- Eigenvalue Problems: Power Iteration
+│   ├── question1.py         (Core Power Iteration library routine with Rayleigh quotient)
+│   ├── question2.py         (Dominant eigenvalue/eigenvector of 4x4 matrix)
+│   └── question3.py         (First two eigenvalues of 5x5 tridiagonal matrix via deflation)
+│
+├── assign9a_fit\            <-- Interpolation & Comparative Data Fitting
+│   ├── question1.py         (Lagrange polynomial interpolation library function)
+│   ├── question2.py         (Weighted linear regression with Pearson r^2)
+│   ├── question3.py         (Lagrange interpolation at x = 6.7 with ascending polynomial coefficients)
+│   └── question4.py         (Comparative fitting: Power law vs Exponential model via Pearson r^2)
+│
+├── assign9b_fit\            <-- Polynomial & Chebyshev Least Squares Regression
+│   ├── question1.py         (Monomial polynomial fit of order k with Hankel condition number)
+│   ├── question2.py         (Shifted Chebyshev basis regression on [0, 1])
+│   ├── question3.py         (Cubic least squares fit on experimental data assign9fit.txt)
+│   └── question4.py         (Condition number and stability comparison: Monomial vs Chebyshev)
+│
+├── Slides\                  <-- Complete collection of course lecture slide decks (PDFs)
+└── helper\                  <-- Comprehensive study notes (Computational_Physics_Complete_Notes.md)
 ```
 
 ---
@@ -256,6 +299,24 @@ D:\NISER\Computational Physics Lab\
 | `monte_carlo` | `(f, a, b, N, seed=1)` | Uniform Monte Carlo (returns `(integral, sigma_f, sigma_int)`) |
 | `integration_error_bound_N` | `(method, a, b, max_deriv, target_error)` | Evaluates theoretical minimum $N$ from error bounds |
 | `gaussian_quadrature` | `(f, a, b, N, method='legendre')` | Unified Gauss-Legendre and Gauss-Laguerre quadrature ($N \in \{1..6\}$) |
+| `euler` | `(f, a, b, y0, h, method='forward')` | Explicit Forward or implicit Backward Euler for IVPs |
+| `predictor_corrector` | `(f, a, b, y0, h)` | Heun's predictor-corrector 2nd-order method |
+| `rk4` | `(f, a, b, y0, h=None, n=None)` | 4th-Order Runge-Kutta for 1st-order and coupled/2nd-order ODEs |
+| `lagrange_linear_interpolation` | `(x1, y1, x2, y2, y_target)` | Linear interpolation for boundary condition matching |
+| `fem_1d_poisson` | `(f_rhs, a, b, ya, yb, n_elements)` | 1D Finite Element Method with linear hat functions & Cholesky |
+| `thomas_algorithm` | `(a, b, c, d)` | $O(n)$ Tridiagonal Matrix Algorithm (TDMA) |
+| `pde_heat_1d_explicit` | `(L, T, nx, nt, u0_func, ...)` | Explicit FTCS scheme for 1D diffusion ($\alpha \le 0.5$) |
+| `pde_heat_1d_implicit` | `(L, T, nx, nt, u0_func, ...)` | Implicit BTCS scheme via Thomas algorithm (unconditionally stable) |
+| `pde_heat_1d_crank_nicolson` | `(L, T, nx, nt, u0_func, ...)` | Crank-Nicolson $O(\Delta t^2 + \Delta x^2)$ scheme |
+| `pde_wave_1d_explicit` | `(L, T, nx, nt, c, u0_func, ...)` | Explicit 2nd-order wave equation solver ($r = c \Delta t / \Delta x \le 1$) |
+| `pde_laplace_poisson_2d`| `(Lx, Ly, nx, ny, rho_func, ...)` | 2D elliptic boundary value solver via SOR relaxation |
+| `power_iteration` | `(A, tolerance=1e-8, max_iterations=1000)` | Dominant eigenvalue and eigenvector via Rayleigh quotient |
+| `lagrange_interpolation` | `(X, x)` | Lagrange polynomial interpolation with ascending power coefficients |
+| `linear_regression` | `(X, sigma=None)` | Weighted linear regression with Pearson $r^2$ goodness-of-fit |
+| `poly_eval` | `(coefficients, x)` | Horner's scheme for polynomial evaluation |
+| `poly_fit` | `(X, k, sigma=None)` | Monomial polynomial least squares of degree $k$ with condition number |
+| `modified_chebyshev_basis` | `(m, x)` | Shifted Chebyshev polynomial $\phi_m(x) = T_m(2x - 1)$ on $[0, 1]$ |
+| `chebyshev_fit` | `(X, k=3, sigma=None)` | Least-squares fitting using shifted Chebyshev orthogonal basis |
 
 ---
 
@@ -312,17 +373,24 @@ if __name__ == '__main__':
 
 ---
 
-## 6. Post-Midsem Roadmap
+## 6. Post-Midsem Status
 
-Topics scheduled for the second half of the semester:
-1. **Ordinary Differential Equations (ODEs):**
-   - Forward Euler, Backward Euler, Predictor-Corrector (Heun / Milne).
-   - Classical 4th-Order Runge-Kutta (RK4) for coupled systems.
-   - Initial Value Problems (IVP) and Boundary Value Problems (Shooting Method, Finite Difference).
-2. **Least Squares Curve Fitting:**
-   - Linear regression, polynomial regression via normal equations.
-   - Non-linear least squares (Gauss-Newton, Levenberg-Marquardt).
-3. **Partial Differential Equations (PDEs) & Eigenvalues (if time permits):**
-   - Heat/Diffusion equation (FTCS, Crank-Nicolson).
-   - Wave equation.
-   - Power method and QR algorithm for matrix eigenvalues.
+All scheduled topics have been implemented, verified, and integrated into `mylib.py`:
+1. **Ordinary Differential Equations (ODEs) — Complete (`assign7a_fwbk`, `assign7b_rk4`, `assign7c_sht`):**
+   - Explicit Forward Euler, Implicit Backward Euler (Newton solver), Heun's Predictor-Corrector.
+   - Classical 4th-Order Runge-Kutta (RK4) for coupled 1st- and 2nd-order ODEs (Damped SHO, Rössler attractor).
+   - Boundary Value Problems via Shooting Method with RK4 and Lagrange interpolation.
+   - 1D Finite Element Method (FEM) with piecewise linear hat functions and Cholesky decomposition.
+2. **Partial Differential Equations (PDEs) — Complete (`assign7d_felem`):**
+   - 1D Diffusion/Heat equation via explicit FTCS and unconditionally stable Crank-Nicolson schemes.
+   - 1D hyperbolic Wave equation with Courant-Friedrichs-Lewy (CFL) stability enforcement.
+   - 2D elliptic Laplace/Poisson solver via Successive Over-Relaxation (SOR).
+3. **Eigenvalues & Eigenvectors — Complete (`assign8_eval`):**
+   - Power Iteration method with Rayleigh quotient.
+   - Matrix deflation via outer products for subdominant eigenvalues.
+   - Analytical verification on tridiagonal Toeplitz spectrum.
+4. **Interpolation & Least Squares Curve Fitting — Complete (`assign9a_fit`, `assign9b_fit`):**
+   - Lagrange polynomial interpolation with ascending power coefficients.
+   - Weighted linear regression with Pearson $r^2$ applied to power-law vs. exponential model comparisons.
+   - Standard polynomial least squares of arbitrary degree $k$ with Frobenius condition number of the Hankel matrix.
+   - Shifted Chebyshev orthogonal polynomial fitting $\phi_m(x) = T_m(2x - 1)$ on $[0, 1]$.

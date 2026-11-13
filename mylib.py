@@ -6,8 +6,8 @@
 import os
 import math
 
-# Default base directory for lab data files
-base_dir = "D:\\NISER\\Computational Physics Lab"
+# Base directory for lab data files (defaults to script directory, with D:\NISER fallback)
+base_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 # =============================================================================
@@ -54,6 +54,57 @@ def random_exponential(lam=1.0):
     while u <= 0.0:
         u = myrand()
     return - (1.0 / lam) * math.log(u)
+
+
+def ehrenfest_diffusion(N=5000, steps=30000, seed=12345):
+    """
+    Simulates the Ehrenfest diffusion model of N particles between two
+    equal halves of a box separated by a wall with a small hole.
+    
+    At t = 0, all N particles are in the left half (N_L = N, N_R = 0).
+    At each step, one particle passes through the hole. Each particle has
+    equal probability of crossing (microscopically, picking one of the N
+    particles uniformly at random; macroscopically, P(L -> R) = N_L / N).
+    
+    Parameters:
+        N     : Total number of particles (default: 5000)
+        steps : Total simulation time steps (default: 30000 >> N)
+        seed  : Seed for LCG pseudo-random number generator
+        
+    Returns:
+        time_steps : list of time steps [0, 1, ..., steps]
+        NL_history : list of particle counts in the left half
+        NR_history : list of particle counts in the right half
+    """
+    if seed:
+        myrand(seed)
+
+    # Track particle locations: 0 for Left, 1 for Right
+    particles = [0] * N
+    NL = N
+    NR = 0
+
+    time_steps = [0]
+    NL_history = [NL]
+    NR_history = [NR]
+
+    for t in range(1, steps + 1):
+        # Pick one particle uniformly at random from all N particles
+        idx = int(myrand() * N)
+        if particles[idx] == 0:
+            particles[idx] = 1
+            NL -= 1
+            NR += 1
+        else:
+            particles[idx] = 0
+            NL += 1
+            NR -= 1
+
+        time_steps.append(t)
+        NL_history.append(NL)
+        NR_history.append(NR)
+
+    return time_steps, NL_history, NR_history
 
 
 # =============================================================================
@@ -124,21 +175,37 @@ class MyComplex:
 def read_matrix_from_file(filename):
     """
     Reads an ASCII text file containing rows of space/tab-separated numbers into a 2D list.
-    Checks current working directory, full path, or base_dir fallback.
+    Supports integers, floats, and fractions (e.g. 2/3, -4/3).
+    Resolves relative to current directory, script directory, base_dir, or assignment subdirectories.
     """
-    if os.path.exists(filename):
-        filepath = filename
-    elif os.path.isabs(filename):
-        filepath = filename
-    else:
-        filepath = os.path.join(base_dir, filename)
+    filepath = filename
+    if not os.path.exists(filepath):
+        candidates = [
+            os.path.join(base_dir, filename),
+            os.path.join(r"D:\NISER\Computational Physics Lab", filename)
+        ]
+        for sub in ("Midsem", "assign8_eval", "assign9b_fit", "assign4_jac_gs", "assign3_lu_chsk", "assign2_gj_lu"):
+            candidates.append(os.path.join(base_dir, sub, filename))
+            candidates.append(os.path.join(r"D:\NISER\Computational Physics Lab", sub, filename))
+        for cand in candidates:
+            if os.path.exists(cand):
+                filepath = cand
+                break
+
+    def _parse_val(tok):
+        tok = tok.strip()
+        if '/' in tok:
+            parts = tok.split('/')
+            if len(parts) == 2:
+                return float(parts[0]) / float(parts[1])
+        return float(tok)
 
     matrix = []
     with open(filepath, 'r') as f:
         for line in f:
             line = line.strip()
             if line and not line.startswith('#'):
-                row = [float(x) for x in line.split()]
+                row = [_parse_val(x) for x in line.split()]
                 matrix.append(row)
     return matrix
 
@@ -272,6 +339,14 @@ def vector_norm(v, p=2):
         return max(abs(x) for x in flat)
     else:
         return (sum(abs(x)**p for x in flat)) ** (1.0 / p)
+
+
+def frobenius_norm(A):
+    """
+    Computes the Frobenius norm of a matrix A:
+        ||A||_F = sqrt(sum_i sum_j |A_ij|^2)
+    """
+    return math.sqrt(sum(sum(abs(aij) ** 2 for aij in row) for row in A))
 
 
 def matrix_residual(A, x, b):
@@ -511,6 +586,38 @@ def matrix_determinant_lu(A):
     for i in range(len(U)):
         det *= U[i][i]
     return det
+
+
+def lu_inverse(A):
+    """
+    Computes the inverse of an n x n square matrix A using Doolittle LU decomposition:
+    Factorizes A = L * U, checks if singular (det(A) == 0), then solves
+    A * x_j = e_j for each column e_j of the identity matrix I_n via forward
+    and backward substitution (L * y_j = e_j, U * x_j = y_j).
+    Returns inverse matrix A^{-1} as a 2D list.
+    """
+    if isinstance(A, str):
+        A_mat = read_matrix_from_file(A)
+    else:
+        A_mat = [[float(x) for x in row] for row in A]
+
+    n = len(A_mat)
+    if any(len(row) != n for row in A_mat):
+        raise ValueError("Matrix A must be square to compute inverse.")
+
+    det = matrix_determinant_lu(A_mat)
+    if abs(det) < 1e-12:
+        raise ValueError(f"Matrix is singular (det(A) = {det}); inverse does not exist.")
+
+    inv_cols = []
+    for j in range(n):
+        ej = [1.0 if i == j else 0.0 for i in range(n)]
+        xj = lu_forback(A_mat, ej, method='lu')
+        inv_cols.append(xj)
+
+    # Transpose column vectors into rows
+    A_inv = [[inv_cols[j][i] for j in range(n)] for i in range(n)]
+    return A_inv
 
 
 # =============================================================================
@@ -1237,3 +1344,881 @@ def gaussian_quadrature(f, a, b, N, method='legendre'):
 
     else:
         raise ValueError("method must be 'legendre' or 'laguerre'.")
+
+
+# =============================================================================
+# 10. ORDINARY DIFFERENTIAL EQUATIONS (ODEs)
+# =============================================================================
+
+def euler(f, a, b, y0, h, method='forward', df_dy=None, tol=1e-8, max_iter=50):
+    """
+    Solves the initial value problem dy/dx = f(x, y) with y(a) = y0 over [a, b]
+    using step size h.
+    
+    Supported methods:
+        - 'forward': Explicit Forward Euler:
+            y_{i+1} = y_i + h * f(x_i, y_i)
+        - 'backward': Implicit Backward Euler (solved via Newton-Raphson):
+            y_{i+1} = y_i + h * f(x_{i+1}, y_{i+1})
+        - 'predictor_corrector' (or 'pc'): Heun's Predictor-Corrector method:
+            y_{i+1}^p = y_i + h * f(x_i, y_i)
+            y_{i+1}   = y_i + (h / 2) * [ f(x_i, y_i) + f(x_{i+1}, y_{i+1}^p) ]
+    """
+    n = int(round((b - a) / h))
+    x = [a + i * h for i in range(n + 1)]
+    y = [float(y0)]
+
+    for i in range(n):
+        xi = x[i]
+        yi = y[i]
+        x_next = x[i + 1]
+
+        if method == 'forward':
+            y_next = yi + h * f(xi, yi)
+
+        elif method == 'backward':
+            # Solve g(y) = y - yi - h * f(x_next, y) = 0 using Newton-Raphson
+            y_curr = yi + h * f(xi, yi)  # initial guess from Forward Euler
+            for _ in range(max_iter):
+                g = y_curr - yi - h * f(x_next, y_curr)
+                if abs(g) < tol:
+                    break
+                if df_dy is not None:
+                    dg = 1.0 - h * df_dy(x_next, y_curr)
+                else:
+                    eps = 1e-6
+                    df_num = (f(x_next, y_curr + eps) - f(x_next, y_curr - eps)) / (2.0 * eps)
+                    dg = 1.0 - h * df_num
+                if abs(dg) < 1e-14:
+                    break
+                y_new = y_curr - g / dg
+                if abs(y_new - y_curr) < tol:
+                    y_curr = y_new
+                    break
+                y_curr = y_new
+            y_next = y_curr
+
+        elif method in ('predictor_corrector', 'pc', 'heun'):
+            y_pred = yi + h * f(xi, yi)
+            y_next = yi + 0.5 * h * (f(xi, yi) + f(x_next, y_pred))
+
+        else:
+            raise ValueError(f"Unknown method '{method}'. Choose 'forward', 'backward', or 'predictor_corrector'.")
+
+        y.append(y_next)
+
+    return x, y
+
+
+def predictor_corrector(f, a, b, y0, h):
+    n = int((b - a) / h)
+    x = [a + i * h for i in range(n + 1)]
+    y = [y0]
+    for i in range(n):
+        # Predictor step (Forward Euler)
+        y_predictor = y[i] + h * f(x[i], y[i])
+        # Corrector step 
+        y_corrector = y[i] + (h / 2) * (f(x[i], y[i]) + f(x[i + 1], y_predictor))
+        y.append(y_corrector)
+    return x, y
+
+
+def rk4(f, a, b, y0, h=None, n=None):
+    """
+    Fourth-order Runge-Kutta (RK4) method for solving initial value problems:
+        dy/dx = f(x, y) with y(a) = y0 over [a, b].
+    
+    Unified routine for both:
+        - 1st-order ODE: y0 is a scalar (int or float).
+        - 2nd-order ODE (or coupled system of ODEs): y0 is a list/tuple of initial values,
+          e.g. [y(a), y'(a)] for y'' = g(x, y, y').
+    
+    Each step uses Forward Euler predictor steps to evaluate slopes at the beginning,
+    midpoint, and endpoint, and then combines them using Simpson's 1/3-rule weights:
+        k1 = f(x_i, y_i)
+        k2 = f(x_i + h/2, y_i + (h/2)*k1)      [Forward Euler predictor for midpoint]
+        k3 = f(x_i + h/2, y_i + (h/2)*k2)      [Forward Euler predictor for midpoint]
+        k4 = f(x_i + h,   y_i + h*k3)          [Forward Euler predictor for endpoint]
+        y_{i+1} = y_i + (h/6) * (k1 + 2*k2 + 2*k3 + k4)  [Simpson's 1/3-rule update]
+    
+    Parameters:
+        f  : Derivative function.
+             - For 1st-order ODE: f(x, y) returns scalar float.
+             - For 2nd-order / system: f(x, y) returns list/tuple of derivatives [y', y''],
+               or f(x, y, v) taking unpacked components.
+        a  : Start of interval.
+        b  : End of interval.
+        y0 : Initial condition at x = a (scalar or list/tuple).
+        h  : Step size (optional if n is provided).
+        n  : Number of steps (optional if h is provided).
+    
+    Returns:
+        x : List of grid points [x_0, x_1, ..., x_n].
+        y : List of solution values. If y0 is scalar, list of floats.
+            If y0 is a list/tuple (2nd-order/system), list of state vectors [y_i, v_i, ...].
+    """
+    if h is None and n is None:
+        raise ValueError("Either step size h or number of steps n must be provided.")
+    
+    if h is not None:
+        steps_float = (b - a) / h
+        if abs(steps_float - round(steps_float)) < 1e-9:
+            n = int(round(steps_float))
+        else:
+            n = int(steps_float)
+    else:
+        h = (b - a) / n
+    
+    x = [a + i * h for i in range(n + 1)]
+    
+    is_system = isinstance(y0, (list, tuple))
+    
+    if is_system:
+        m = len(y0)
+        # Helper to evaluate vector f safely with either f(x, y_vec) or f(x, *y_vec)
+        def eval_vec(x_val, y_vec):
+            try:
+                res = f(x_val, y_vec)
+            except TypeError:
+                res = f(x_val, *y_vec)
+            return [float(v) for v in res]
+        
+        y = [[float(v) for v in y0]]
+        
+        for i in range(n):
+            xi = x[i]
+            yi = y[i]
+            
+            # Step 1: Slope at interval beginning
+            k1 = eval_vec(xi, yi)
+            
+            # Step 2: Forward Euler step of h/2 to midpoint using slope k1
+            y_mid1 = [yi[j] + 0.5 * h * k1[j] for j in range(m)]
+            k2 = eval_vec(xi + 0.5 * h, y_mid1)
+            
+            # Step 3: Forward Euler step of h/2 to midpoint using slope k2
+            y_mid2 = [yi[j] + 0.5 * h * k2[j] for j in range(m)]
+            k3 = eval_vec(xi + 0.5 * h, y_mid2)
+            
+            # Step 4: Forward Euler step of h to endpoint using slope k3
+            y_end = [yi[j] + h * k3[j] for j in range(m)]
+            k4 = eval_vec(xi + h, y_end)
+            
+            # Step 5: Simpson's 1/3-rule combination of slopes
+            y_next = [yi[j] + (h / 6.0) * (k1[j] + 2.0 * k2[j] + 2.0 * k3[j] + k4[j]) for j in range(m)]
+            y.append(y_next)
+            
+        return x, y
+        
+    else:
+        # Scalar 1st-order ODE
+        y = [float(y0)]
+        
+        for i in range(n):
+            xi = x[i]
+            yi = y[i]
+            
+            # Step 1: Slope at interval beginning
+            k1 = float(f(xi, yi))
+            
+            # Step 2: Forward Euler step of h/2 to midpoint using slope k1
+            y_mid1 = yi + 0.5 * h * k1
+            k2 = float(f(xi + 0.5 * h, y_mid1))
+            
+            # Step 3: Forward Euler step of h/2 to midpoint using slope k2
+            y_mid2 = yi + 0.5 * h * k2
+            k3 = float(f(xi + 0.5 * h, y_mid2))
+            
+            # Step 4: Forward Euler step of h to endpoint using slope k3
+            y_end = yi + h * k3
+            k4 = float(f(xi + h, y_end))
+            
+            # Step 5: Simpson's 1/3-rule combination of slopes
+            y_next = yi + (h / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
+            y.append(y_next)
+            
+        return x, y
+
+
+def lagrange_linear_interpolation(x1, y1, x2, y2, y_target):
+    """
+    Linear interpolation using Lagrange formula to find x for a given y_target
+    between two points (x1, y1) and (x2, y2).
+    """
+    return x1 * (y_target - y2) / (y1 - y2) + x2 * (y_target - y1) / (y2 - y1)
+
+
+def fem_1d_poisson(f_rhs, a, b, ya, yb, n_elements):
+    """
+    Solves y''(x) = f(x) on [a, b] with y(a) = ya, y(b) = yb using
+    the Finite Element Method (FEM) with linear hat functions and Cholesky decomposition.
+    """
+    h = (b - a) / n_elements
+    nodes = [a + i * h for i in range(n_elements + 1)]
+    n_int = n_elements - 1
+
+    K = [[0.0] * n_int for _ in range(n_int)]
+    F = [0.0] * n_int
+
+    for i in range(n_int):
+        K[i][i] = 2.0 / h
+        if i > 0:
+            K[i][i - 1] = -1.0 / h
+        if i < n_int - 1:
+            K[i][i + 1] = -1.0 / h
+
+        xi = nodes[i + 1]
+        F[i] = -f_rhs(xi) * h
+
+    F[0] -= (-1.0 / h) * ya
+    F[-1] -= (-1.0 / h) * yb
+
+    L = cholesky_decomposition(K)
+    y_int = cholesky_forback(L, F)
+
+    y_nodes = [ya] + list(y_int) + [yb]
+    return nodes, y_nodes
+
+
+# =============================================================================
+# 11. PARTIAL DIFFERENTIAL EQUATIONS (PDEs)
+# =============================================================================
+
+def thomas_algorithm(a, b, c, d):
+    """
+    Tridiagonal Matrix Algorithm (TDMA / Thomas Algorithm) for solving
+    A * x = d where A is tridiagonal:
+        a[i] * x[i-1] + b[i] * x[i] + c[i] * x[i+1] = d[i]
+    
+    Parameters:
+        a : Subdiagonal entries (length n-1 or n with dummy a[0]).
+        b : Main diagonal entries (length n).
+        c : Superdiagonal entries (length n-1 or n with dummy c[-1]).
+        d : Right-hand side vector (length n).
+        
+    Returns:
+        x : Solution vector of length n.
+    Complexity: O(n) time and O(n) space.
+    """
+    n = len(b)
+    # If subdiagonal or superdiagonal are passed with length n, align them
+    a_sub = a if len(a) == n - 1 else a[1:]
+    c_sup = c if len(c) == n - 1 else c[:-1]
+
+    cp = [0.0] * (n - 1)
+    dp = [0.0] * n
+
+    # Forward sweep
+    cp[0] = c_sup[0] / b[0]
+    dp[0] = d[0] / b[0]
+    for i in range(1, n - 1):
+        denom = b[i] - a_sub[i - 1] * cp[i - 1]
+        cp[i] = c_sup[i] / denom
+        dp[i] = (d[i] - a_sub[i - 1] * dp[i - 1]) / denom
+
+    denom = b[n - 1] - a_sub[n - 2] * cp[n - 2]
+    dp[n - 1] = (d[n - 1] - a_sub[n - 2] * dp[n - 2]) / denom
+
+    # Backward substitution
+    x = [0.0] * n
+    x[n - 1] = dp[n - 1]
+    for i in range(n - 2, -1, -1):
+        x[i] = dp[i] - cp[i] * x[i + 1]
+
+    return x
+
+
+def pde_heat_1d_explicit(L, T, nx, nt, u0_func, left_bc=0.0, right_bc=0.0, save_steps=None):
+    """
+    Solves the 1D diffusion / heat equation:
+        u_t = u_xx   over x in [0, L], t in [0, T]
+    using the explicit Forward-Time Central-Space (FTCS) finite-difference scheme.
+    
+    Discretization:
+        (u_{i, j+1} - u_{i, j}) / ht = (u_{i+1, j} - 2 u_{i, j} + u_{i-1, j}) / hx^2
+        u_{i, j+1} = alpha * (u_{i+1, j} + u_{i-1, j}) + (1 - 2*alpha) * u_{i, j}
+        where alpha = ht / hx^2.
+        
+    Weak stability condition:
+        alpha <= 0.5. If alpha > 0.5, explicit scheme becomes unstable and oscillates wildly.
+        
+    Parameters:
+        L          : Length of spatial domain [0, L]
+        T          : Total simulation time [0, T]
+        nx         : Number of spatial intervals (nx + 1 grid points)
+        nt         : Number of time intervals (nt + 1 time steps)
+        u0_func    : Initial condition u(x, 0), function or list/tuple of length nx + 1
+        left_bc    : Left boundary condition u(0, t), float or function(t)
+        right_bc   : Right boundary condition u(L, t), float or function(t)
+        save_steps : Iterable of specific time step indices to record (default: all steps)
+        
+    Returns:
+        x          : List of spatial grid points
+        snapshots  : Dict mapping step index -> temperature profile list at that step
+    """
+    hx = L / nx
+    ht = T / nt
+    alpha = ht / (hx ** 2)
+
+    if alpha > 0.5:
+        raise ValueError(
+            f"Explicit FTCS scheme is unstable: alpha = ht/(hx^2) = {alpha:.4f} > 0.5. "
+            "Increase nt or decrease nx."
+        )
+
+    x = [i * hx for i in range(nx + 1)]
+
+    # Initial condition
+    if callable(u0_func):
+        u = [float(u0_func(xi)) for xi in x]
+    else:
+        u = [float(val) for val in u0_func]
+
+    # Enforce boundary conditions at t = 0
+    u[0] = float(left_bc(0.0)) if callable(left_bc) else float(left_bc)
+    u[-1] = float(right_bc(0.0)) if callable(right_bc) else float(right_bc)
+
+    save_set = set(save_steps) if save_steps is not None else None
+    snapshots = {}
+    if save_set is None or 0 in save_set:
+        snapshots[0] = list(u)
+
+    for step in range(1, nt + 1):
+        t_curr = step * ht
+        bc_l = float(left_bc(t_curr)) if callable(left_bc) else float(left_bc)
+        bc_r = float(right_bc(t_curr)) if callable(right_bc) else float(right_bc)
+
+        u_next = [0.0] * (nx + 1)
+        u_next[0] = bc_l
+        u_next[-1] = bc_r
+
+        for i in range(1, nx):
+            u_next[i] = alpha * (u[i + 1] + u[i - 1]) + (1.0 - 2.0 * alpha) * u[i]
+
+        u = u_next
+        if save_set is None or step in save_set:
+            snapshots[step] = list(u)
+
+    return x, snapshots
+
+
+def pde_heat_1d_implicit(L, T, nx, nt, u0_func, left_bc=0.0, right_bc=0.0, save_steps=None):
+    """
+    Solves the 1D diffusion / heat equation:
+        u_t = u_xx   over x in [0, L], t in [0, T]
+    using the implicit Backward-Time Central-Space (BTCS) finite-difference scheme.
+    
+    Discretization:
+        (u_{i, j} - u_{i, j-1}) / ht = (u_{i+1, j} - 2 u_{i, j} + u_{i-1, j}) / hx^2
+        -alpha * u_{i-1, j} + (1 + 2*alpha) * u_{i, j} - alpha * u_{i+1, j} = u_{i, j-1}
+        where alpha = ht / hx^2.
+        
+    In matrix form: A * V_j = V_{j-1}, where A is tridiagonal:
+        diag = 1 + 2*alpha, sub/superdiag = -alpha.
+    Solved efficiently using Thomas algorithm in O(nx) per time step.
+    Unconditionally stable for all alpha > 0.
+    
+    Parameters:
+        L          : Length of spatial domain [0, L]
+        T          : Total simulation time [0, T]
+        nx         : Number of spatial intervals (nx + 1 grid points)
+        nt         : Number of time intervals (nt + 1 time steps)
+        u0_func    : Initial condition u(x, 0), function or list/tuple of length nx + 1
+        left_bc    : Left boundary condition u(0, t), float or function(t)
+        right_bc   : Right boundary condition u(L, t), float or function(t)
+        save_steps : Iterable of specific time step indices to record (default: all steps)
+        
+    Returns:
+        x          : List of spatial grid points
+        snapshots  : Dict mapping step index -> temperature profile list at that step
+    """
+    hx = L / nx
+    ht = T / nt
+    alpha = ht / (hx ** 2)
+
+    x = [i * hx for i in range(nx + 1)]
+
+    if callable(u0_func):
+        u = [float(u0_func(xi)) for xi in x]
+    else:
+        u = [float(val) for val in u0_func]
+
+    u[0] = float(left_bc(0.0)) if callable(left_bc) else float(left_bc)
+    u[-1] = float(right_bc(0.0)) if callable(right_bc) else float(right_bc)
+
+    save_set = set(save_steps) if save_steps is not None else None
+    snapshots = {}
+    if save_set is None or 0 in save_set:
+        snapshots[0] = list(u)
+
+    # Size of interior tridiagonal system: M = nx - 1 (unknowns u_1 to u_{nx-1})
+    M = nx - 1
+    a_diag = [-alpha] * (M - 1)
+    b_diag = [1.0 + 2.0 * alpha] * M
+    c_diag = [-alpha] * (M - 1)
+
+    for step in range(1, nt + 1):
+        t_curr = step * ht
+        bc_l = float(left_bc(t_curr)) if callable(left_bc) else float(left_bc)
+        bc_r = float(right_bc(t_curr)) if callable(right_bc) else float(right_bc)
+
+        # RHS vector is previous interior solution
+        d = [u[i] for i in range(1, nx)]
+        # Boundary contributions
+        d[0] += alpha * bc_l
+        d[-1] += alpha * bc_r
+
+        # Solve tridiagonal system
+        u_interior = thomas_algorithm(a_diag, b_diag, c_diag, d)
+
+        u = [bc_l] + u_interior + [bc_r]
+        if save_set is None or step in save_set:
+            snapshots[step] = list(u)
+
+    return x, snapshots
+
+
+def pde_heat_1d_crank_nicolson(L, T, nx, nt, u0_func, left_bc=0.0, right_bc=0.0, save_steps=None):
+    """
+    Solves the 1D diffusion / heat equation:
+        u_t = u_xx   over x in [0, L], t in [0, T]
+    using the Crank-Nicolson finite-difference scheme.
+    
+    Averages explicit and implicit spatial differences:
+        (u_{i, j+1} - u_{i, j}) / ht = 0.5 * [ (delta_x^2 u)_{i, j+1} + (delta_x^2 u)_{i, j} ]
+    Second-order accurate in both space and time: O(ht^2 + hx^2).
+    Unconditionally stable for all alpha > 0.
+    """
+    hx = L / nx
+    ht = T / nt
+    alpha = ht / (hx ** 2)
+
+    x = [i * hx for i in range(nx + 1)]
+
+    if callable(u0_func):
+        u = [float(u0_func(xi)) for xi in x]
+    else:
+        u = [float(val) for val in u0_func]
+
+    u[0] = float(left_bc(0.0)) if callable(left_bc) else float(left_bc)
+    u[-1] = float(right_bc(0.0)) if callable(right_bc) else float(right_bc)
+
+    save_set = set(save_steps) if save_steps is not None else None
+    snapshots = {}
+    if save_set is None or 0 in save_set:
+        snapshots[0] = list(u)
+
+    M = nx - 1
+    a_diag = [-0.5 * alpha] * (M - 1)
+    b_diag = [1.0 + alpha] * M
+    c_diag = [-0.5 * alpha] * (M - 1)
+
+    for step in range(1, nt + 1):
+        t_curr = step * ht
+        bc_l_curr = float(left_bc(t_curr)) if callable(left_bc) else float(left_bc)
+        bc_r_curr = float(right_bc(t_curr)) if callable(right_bc) else float(right_bc)
+
+        d = [0.0] * M
+        for i in range(1, nx):
+            idx = i - 1
+            d[idx] = (1.0 - alpha) * u[i] + 0.5 * alpha * (u[i + 1] + u[i - 1])
+
+        d[0] += 0.5 * alpha * bc_l_curr
+        d[-1] += 0.5 * alpha * bc_r_curr
+
+        u_interior = thomas_algorithm(a_diag, b_diag, c_diag, d)
+        u = [bc_l_curr] + u_interior + [bc_r_curr]
+
+        if save_set is None or step in save_set:
+            snapshots[step] = list(u)
+
+    return x, snapshots
+
+
+def pde_wave_1d_explicit(L, T, nx, nt, c, u0_func, v0_func=None, left_bc=0.0, right_bc=0.0, save_steps=None):
+    """
+    Solves the 1D wave equation:
+        u_tt = c^2 * u_xx   over x in [0, L], t in [0, T]
+    with initial displacement u(x, 0) = u0(x) and initial velocity u_t(x, 0) = v0(x).
+    
+    Discretization:
+        (u_{i, j+1} - 2*u_{i, j} + u_{i, j-1}) / ht^2 = c^2 * (u_{i+1, j} - 2*u_{i, j} + u_{i-1, j}) / hx^2
+        u_{i, j+1} = 2*(1 - r^2)*u_{i, j} + r^2*(u_{i+1, j} + u_{i-1, j}) - u_{i, j-1}
+        where r = c * ht / hx.
+        
+    CFL stability condition:
+        r <= 1.0 (Courant-Friedrichs-Lewy condition).
+    """
+    hx = L / nx
+    ht = T / nt
+    r = c * ht / hx
+
+    if r > 1.0:
+        raise ValueError(
+            f"Wave scheme unstable: CFL number r = c*ht/hx = {r:.4f} > 1.0 (must be <= 1.0). "
+            "Decrease ht or increase nx."
+        )
+
+    x = [i * hx for i in range(nx + 1)]
+    u0 = [float(u0_func(xi)) for xi in x]
+    v0 = [float(v0_func(xi)) if v0_func else 0.0 for xi in x]
+
+    u0[0] = float(left_bc(0.0)) if callable(left_bc) else float(left_bc)
+    u0[-1] = float(right_bc(0.0)) if callable(right_bc) else float(right_bc)
+
+    save_set = set(save_steps) if save_steps is not None else None
+    snapshots = {}
+    if save_set is None or 0 in save_set:
+        snapshots[0] = list(u0)
+
+    # First time step j = 1 using Taylor expansion: u_1 = u_0 + ht*v_0 + 0.5*(c*ht)^2 * u_xx
+    t1 = ht
+    u1 = [0.0] * (nx + 1)
+    u1[0] = float(left_bc(t1)) if callable(left_bc) else float(left_bc)
+    u1[-1] = float(right_bc(t1)) if callable(right_bc) else float(right_bc)
+    r2 = r * r
+
+    for i in range(1, nx):
+        u1[i] = u0[i] + ht * v0[i] + 0.5 * r2 * (u0[i + 1] - 2.0 * u0[i] + u0[i - 1])
+
+    if save_set is None or 1 in save_set:
+        snapshots[1] = list(u1)
+
+    u_prev = u0
+    u_curr = u1
+
+    for step in range(2, nt + 1):
+        t_curr = step * ht
+        u_next = [0.0] * (nx + 1)
+        u_next[0] = float(left_bc(t_curr)) if callable(left_bc) else float(left_bc)
+        u_next[-1] = float(right_bc(t_curr)) if callable(right_bc) else float(right_bc)
+
+        for i in range(1, nx):
+            u_next[i] = 2.0 * (1.0 - r2) * u_curr[i] + r2 * (u_curr[i + 1] + u_curr[i - 1]) - u_prev[i]
+
+        u_prev = u_curr
+        u_curr = u_next
+
+        if save_set is None or step in save_set:
+            snapshots[step] = list(u_curr)
+
+    return x, snapshots
+
+
+def pde_laplace_poisson_2d(Lx, Ly, nx, ny, rho_func=None, top=0.0, bottom=0.0, left=0.0, right=0.0, tol=1e-6, max_iter=2000, omega=1.5):
+    """
+    Solves the 2D Laplace or Poisson equation:
+        nabla^2 u = u_xx + u_yy = rho(x, y)   over [0, Lx] x [0, Ly]
+    with Dirichlet boundary conditions on the rectangular domain edges.
+    
+    Uses Successive Over-Relaxation (SOR) with parameter omega in (1, 2).
+    Set rho_func=None for Laplace's equation (nabla^2 u = 0).
+    """
+    hx = Lx / nx
+    hy = Ly / ny
+    h2 = hx * hy  # symmetric step assumed (hx approx hy)
+
+    # Grid: (nx + 1) rows along x, (ny + 1) cols along y
+    u = [[0.0] * (ny + 1) for _ in range(nx + 1)]
+
+    # Boundary conditions
+    for i in range(nx + 1):
+        u[i][0] = bottom
+        u[i][ny] = top
+    for j in range(ny + 1):
+        u[0][j] = left
+        u[nx][j] = right
+
+    # Precompute source rho(x, y)
+    f = [[0.0] * (ny + 1) for _ in range(nx + 1)]
+    if rho_func is not None:
+        for i in range(nx + 1):
+            xi = i * hx
+            for j in range(ny + 1):
+                yj = j * hy
+                f[i][j] = float(rho_func(xi, yj))
+
+    # SOR relaxation loop
+    for it in range(max_iter):
+        max_diff = 0.0
+        for i in range(1, nx):
+            for j in range(1, ny):
+                u_gs = 0.25 * (u[i + 1][j] + u[i - 1][j] + u[i][j + 1] + u[i][j - 1] - h2 * f[i][j])
+                u_sor = (1.0 - omega) * u[i][j] + omega * u_gs
+                diff = abs(u_sor - u[i][j])
+                if diff > max_diff:
+                    max_diff = diff
+                u[i][j] = u_sor
+
+        if max_diff < tol:
+            break
+
+    x = [i * hx for i in range(nx + 1)]
+    y = [j * hy for j in range(ny + 1)]
+    return x, y, u
+
+# =============================================================================
+# 12. EIGENVALUE PROBLEMS: POWER ITERATION
+# =============================================================================
+
+def power_iteration(A, tolerance=1e-8, max_iterations=1000, x0=None, y=None):
+    """
+    Computes dominant eigenvalue and eigenvector using Power Iteration with Rayleigh quotient.
+    """
+    if not A or any(len(row) != len(A) for row in A):
+        raise ValueError("Matrix A must be a non-empty square matrix.")
+
+    n = len(A)
+    if x0 is None:
+        x0 = [0.5 + myrand() for _ in range(n)]
+    if y is None:
+        y = list(x0)
+
+    norm_x0 = vector_norm(x0)
+    if norm_x0 == 0:
+        raise ValueError("Initial vector x0 cannot be the zero vector.")
+    xk = [val / norm_x0 for val in x0]
+
+    old_lambda = None
+    for it in range(1, max_iterations + 1):
+        x_next = matrix_vector_multiply(A, xk)
+
+        denominator = dot_product_vector(xk, y)
+        if abs(denominator) < 1e-15:
+            raise ValueError("Denominator (xk . y) became zero during iteration.")
+
+        new_lambda = dot_product_vector(x_next, y) / denominator
+
+        norm = vector_norm(x_next)
+        if norm == 0:
+            return 0.0, xk, it
+        xk = [v / norm for v in x_next]
+
+        if old_lambda is not None and abs(new_lambda - old_lambda) < tolerance:
+            return new_lambda, xk, it
+
+        old_lambda = new_lambda
+
+    raise RuntimeError("Power iteration did not converge within max_iterations.")
+
+
+# =============================================================================
+# 13. INTERPOLATION & DATA FITTING
+# =============================================================================
+
+def lagrange_interpolation(X, x):
+    """
+    Lagrange polynomial interpolation for data points X = [(x_i, y_i), ...].
+    Returns (interpolated_value, coefficients_ascending).
+    """
+    if len(X) == 0:
+        raise ValueError("Interpolation dataset cannot be empty.")
+
+    if len(X) == 2 and not isinstance(X[0][0], (list, tuple)):
+        x_values = X[0]
+        y_values = X[1]
+    else:
+        if any(len(row) != 2 for row in X):
+            raise ValueError("Dataset must contain (x, y) pairs.")
+        x_values = [row[0] for row in X]
+        y_values = [row[1] for row in X]
+
+    if len(x_values) != len(y_values):
+        raise ValueError("x and y data must have the same length.")
+    if len(set(x_values)) != len(x_values):
+        raise ValueError("x values must be distinct for Lagrange interpolation.")
+
+    coefficients = [0.0] * len(x_values)
+    for i, x_i in enumerate(x_values):
+        basis = [1.0]
+        for j, x_j in enumerate(x_values):
+            if i != j:
+                factor = [-x_j / (x_i - x_j), 1.0 / (x_i - x_j)]
+                product = [0.0] * (len(basis) + 1)
+                for power, coefficient in enumerate(basis):
+                    product[power] += coefficient * factor[0]
+                    product[power + 1] += coefficient * factor[1]
+                basis = product
+
+        for power, coefficient in enumerate(basis):
+            coefficients[power] += y_values[i] * coefficient
+
+    value = sum(c * (x ** p) for p, c in enumerate(coefficients))
+    return value, coefficients
+
+
+def linear_regression(X, sigma=None):
+    """
+    Performs weighted linear regression: y = slope * x + intercept.
+    Calculates Pearson's correlation coefficient r^2.
+    Returns (slope, intercept, r_squared).
+    """
+    if not X:
+        raise ValueError("The dataset cannot be empty.")
+
+    if len(X) == 2 and not isinstance(X[0][0], (list, tuple)):
+        x_values = X[0]
+        y_values = X[1]
+    else:
+        if any(len(row) != 2 for row in X):
+            raise ValueError("Dataset must contain (x, y) pairs.")
+        x_values = [row[0] for row in X]
+        y_values = [row[1] for row in X]
+
+    n = len(x_values)
+    if len(y_values) != n:
+        raise ValueError("The x and y data must have the same length.")
+    if n < 2:
+        raise ValueError("At least two data points are required.")
+
+    if sigma is None:
+        sigma_values = [1.0] * n
+    elif isinstance(sigma, (int, float)):
+        sigma_values = [float(sigma)] * n
+    else:
+        sigma_values = list(sigma)
+        if len(sigma_values) != n:
+            raise ValueError("sigma must have one value for each data point.")
+
+    if any(value <= 0 for value in sigma_values):
+        raise ValueError("All sigma values must be positive.")
+
+    weights = [1.0 / (value ** 2) for value in sigma_values]
+    S = sum(weights)
+    Sx = sum(weight * xi for weight, xi in zip(weights, x_values))
+    Sy = sum(weight * yi for weight, yi in zip(weights, y_values))
+    Sxx = sum(weight * (xi ** 2) for weight, xi in zip(weights, x_values))
+    Sxy = sum(weight * xi * yi for weight, xi, yi in zip(weights, x_values, y_values))
+    Syy = sum(weight * (yi ** 2) for weight, yi in zip(weights, y_values))
+
+    denominator = S * Sxx - Sx ** 2
+    if denominator == 0:
+        raise ValueError("Denominator in slope calculation is zero.")
+
+    slope = (S * Sxy - Sx * Sy) / denominator
+    intercept = (Sxx * Sy - Sx * Sxy) / denominator
+
+    denom_r2 = denominator * (S * Syy - Sy ** 2)
+    r_squared = ((S * Sxy - Sx * Sy) ** 2 / denom_r2) if denom_r2 != 0 else 1.0
+
+    return slope, intercept, r_squared
+
+
+def poly_eval(coefficients, x):
+    """
+    Evaluates polynomial P(x) = c0 + c1*x + c2*x^2 + ... using Horner's scheme.
+    """
+    result = 0.0
+    for c in reversed(coefficients):
+        result = result * x + c
+    return result
+
+
+def poly_fit(X, k, sigma=None):
+    """
+    Fits data X using standard monomial basis up to order k:
+        y(x) = a0 + a1*x + a2*x^2 + ... + ak*x^k
+    Solves normal equations (Hankel matrix) using LU decomposition.
+    Returns (coeffs, A, cond_num) where:
+        coeffs   : list of coefficients [a0, a1, ..., ak]
+        A        : Hankel regression matrix
+        cond_num : Frobenius condition number of A
+    """
+    if not X:
+        raise ValueError("Dataset cannot be empty.")
+
+    if isinstance(X[0], (list, tuple)) and not isinstance(X[0][0], (list, tuple)) and len(X) == 2:
+        x_vals = list(X[0])
+        y_vals = list(X[1])
+    else:
+        x_vals = [row[0] for row in X]
+        y_vals = [row[1] for row in X]
+
+    N = len(x_vals)
+    if N < k + 1:
+        raise ValueError(f"At least {k + 1} data points are required for order {k}.")
+
+    if sigma is None:
+        w = [1.0] * N
+    elif isinstance(sigma, (int, float)):
+        w = [1.0 / (float(sigma) ** 2)] * N
+    else:
+        w = [1.0 / (s ** 2) for s in sigma]
+
+    dim = k + 1
+    A = [[0.0] * dim for _ in range(dim)]
+    b = [0.0] * dim
+
+    for i in range(dim):
+        b[i] = sum(w[p] * y_vals[p] * (x_vals[p] ** i) for p in range(N))
+        for j in range(dim):
+            A[i][j] = sum(w[p] * (x_vals[p] ** (i + j)) for p in range(N))
+
+    coeffs = lu_forback(A, b)
+    B = gauss_jordan_inverse(A)
+    cond_num = frobenius_norm(A) * frobenius_norm(B)
+    return coeffs, A, cond_num
+
+
+def modified_chebyshev_basis(m, x):
+    """
+    Evaluates shifted Chebyshev polynomial phi_m(x) = T_m(2x - 1) on [0, 1].
+    phi_0(x) = 1
+    phi_1(x) = 2x - 1
+    phi_2(x) = 8x^2 - 8x + 1
+    phi_3(x) = 32x^3 - 48x^2 + 18x - 1
+    Recurrence: phi_m(x) = 2*(2x - 1)*phi_{m-1}(x) - phi_{m-2}(x)
+    """
+    if m < 0:
+        raise ValueError(f"Degree m must be non-negative, got {m}.")
+    if m == 0:
+        return 1.0
+    u = 2.0 * x - 1.0
+    if m == 1:
+        return u
+    t_prev, t_curr = 1.0, u
+    for _ in range(2, m + 1):
+        t_next = 2.0 * u * t_curr - t_prev
+        t_prev, t_curr = t_curr, t_next
+    return t_curr
+
+
+def chebyshev_fit(X, k=3, sigma=None):
+    """
+    Fits data X using shifted Chebyshev basis polynomials up to order k on [0, 1].
+    Returns (coeffs, A) where A is the normal regression matrix.
+    """
+    if not X:
+        raise ValueError("Dataset cannot be empty.")
+
+    if isinstance(X[0], (list, tuple)) and not isinstance(X[0][0], (list, tuple)) and len(X) == 2:
+        x_vals = list(X[0])
+        y_vals = list(X[1])
+    else:
+        x_vals = [row[0] for row in X]
+        y_vals = [row[1] for row in X]
+
+    N = len(x_vals)
+    if N < k + 1:
+        raise ValueError(f"At least {k + 1} data points are required for order {k}.")
+
+    if sigma is None:
+        w = [1.0] * N
+    elif isinstance(sigma, (int, float)):
+        w = [1.0 / (float(sigma) ** 2)] * N
+    else:
+        w = [1.0 / (s ** 2) for s in sigma]
+
+    dim = k + 1
+    phi_vals = [[modified_chebyshev_basis(m, xi) for m in range(dim)] for xi in x_vals]
+
+    A = [[0.0] * dim for _ in range(dim)]
+    b = [0.0] * dim
+
+    for i in range(dim):
+        b[i] = sum(w[p] * y_vals[p] * phi_vals[p][i] for p in range(N))
+        for j in range(dim):
+            A[i][j] = sum(w[p] * phi_vals[p][i] * phi_vals[p][j] for p in range(N))
+
+    coeffs = lu_forback(A, b)
+    return coeffs, A

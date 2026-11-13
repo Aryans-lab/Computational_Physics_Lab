@@ -1,0 +1,9 @@
+
+##########################################################
+# Output:
+# Total particles N = 5000
+# At final time step t = 30000:
+# Number of particles on left side  = 2468
+# Number of particles on right side = 2532
+# Both sides reach equilibrium around N/2 = 2500
+###########################################################

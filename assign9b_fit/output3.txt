@@ -1,0 +1,6 @@
+Cubic Polynomial Least Square Fit:
+  a0 = 0.574659
+  a1 = 4.725861
+  a2 = -11.128218
+  a3 = 7.668678
+Condition number of Hankel matrix: 12195.8541

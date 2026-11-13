@@ -1,0 +1,6 @@
+##############################################
+# Output:
+# Numerical evaluation of <r> using Gauss-Legendre Quadrature:
+# Gauss-Legendre (N = 6, upper limit = 6.0 a0):
+# <r> = 1.5004 a0
+#################################################

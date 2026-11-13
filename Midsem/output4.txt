@@ -1,0 +1,5 @@
+##########################################
+# Output:
+# Numerical calculation using Midpoint method (N1=116, N2=200):
+# Centre of mass (x_cm)= 1.5000 m
+############################################

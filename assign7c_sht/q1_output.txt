@@ -1,0 +1,9 @@
+Shooting method output and iterations
+Shot 1: Initial slope z1 = +0.000 and Boundary y(L) = +0.0320 meters
+Shot 2: Initial slope z2 = +0.080 and Boundary y(L) = +0.1920 meters
+Interpolated correct slope z = -0.0160
+Final Shot: Boundary y(L) = 2.56e-17 m (Target = 0.0 m)
+
+Maximum depression = 0.010000 m at x = 1.0000 m
+Half-maximum depression = 5.000 mm (0.005 m)
+Half-maximum locations = x = 0.3288 m and x = 1.6712 m

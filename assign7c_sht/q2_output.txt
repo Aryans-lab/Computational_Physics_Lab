@@ -1,0 +1,7 @@
+Shooting method heat conduction output and iterations
+Shot 1: Initial slope z1 = +0.00 : T(L) = 50.862 deg C
+Shot 2: Initial slope z2 = +2.00 : T(L) = 74.366 deg C
+Interpolated correct slope dT/dx(0) = 12.6905 deg C/m
+Final Shot: T(L) = 200.0 deg C (Target = 200.0 deg C)
+
+Temperature T = 100 deg C is reached at x = 4.4253 m
