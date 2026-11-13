@@ -246,6 +246,84 @@ D:\NISER\Computational Physics Lab\
     $$\int_0^\infty e^{-t} f(t) dt \approx \sum_{i=1}^N w_i f(t_i)$$
     Note: When calling `gaussian_quadrature(f, 0, inf, N, method='laguerre')`, $f(t)$ represents the factor *without* $e^{-t}$.
 
+### 3.8 Ordinary Differential Equations (ODEs)
+- **Initial Value Problems (IVPs):** $\frac{dy}{dx} = f(x, y)$ with $y(x_0) = y_0$.
+- **Explicit Forward Euler:**
+  $$y_{n+1} = y_n + h f(x_n, y_n)$$
+  Local truncation error $O(h^2)$, global error $O(h)$. Simple but conditionally stable ($|1 + h\lambda| \le 1$).
+- **Implicit Backward Euler:**
+  $$y_{n+1} = y_n + h f(x_{n+1}, y_{n+1})$$
+  Solved via Newton-Raphson: $g(y) = y - y_n - h f(x_{n+1}, y) = 0$. Unconditionally stable for stiff equations ($\text{Re}(\lambda) < 0$).
+- **Heun's Predictor-Corrector Method:**
+  $$y_{n+1}^p = y_n + h f(x_n, y_n) \quad \text{(Predictor)}$$
+  $$y_{n+1} = y_n + \frac{h}{2} \left[ f(x_n, y_n) + f(x_{n+1}, y_{n+1}^p) \right] \quad \text{(Corrector)}$$
+  Global accuracy $O(h^2)$.
+- **Runge-Kutta 4th-Order (RK4):**
+  $$k_1 = f(x_n, y_n)$$
+  $$k_2 = f\left(x_n + \frac{h}{2}, y_n + \frac{h}{2} k_1\right)$$
+  $$k_3 = f\left(x_n + \frac{h}{2}, y_n + \frac{h}{2} k_2\right)$$
+  $$k_4 = f(x_n + h, y_n + h k_3)$$
+  $$y_{n+1} = y_n + \frac{h}{6} (k_1 + 2k_2 + 2k_3 + k_4)$$
+  Fourth-order accuracy $O(h^4)$, derived from Simpson's 1/3 quadrature. Extends naturally to coupled systems $\mathbf{y}' = \mathbf{f}(x, \mathbf{y})$:
+  - Second-order ODEs $y'' = g(x, y, y')$ decomposed into $\mathbf{y} = [y, v]^T$, $\mathbf{y}' = [v, g(x, y, v)]^T$.
+  - Applied to damped harmonic oscillators ($E(t)$ tracking) and 3D chaotic attractors (Rössler system).
+- **Two-Point Boundary Value Problems (BVPs):**
+  - **Shooting Method:** Converts BVP $y'' = f(x, y, y'), y(a) = \alpha, y(b) = \beta$ into IVP with guessed initial slope $z_0 = y'(a)$. Shoots via RK4 to $x = b$. Uses linear interpolation between two trial slopes $z_1, z_2$ to find the exact initial condition $z^*$:
+    $$z^* = z_1 + (z_2 - z_1) \frac{\beta - y(b; z_1)}{y(b; z_2) - y(b; z_1)}$$
+  - **1D Finite Element Method (FEM):** Weak formulation $\int (y' v' + f v) dx = 0$ with piecewise linear hat basis functions. Assembles a symmetric positive-definite tridiagonal stiffness matrix, solved via Cholesky decomposition.
+
+### 3.9 Partial Differential Equations (PDEs)
+- **1D Heat / Diffusion Equation:** $\frac{\partial u}{\partial t} = \frac{\partial^2 u}{\partial x^2}$ on $[0, L] \times [0, T]$ with parameter $\alpha = \frac{\Delta t}{\Delta x^2}$.
+  - **Explicit FTCS:** $u_i^{j+1} = \alpha (u_{i+1}^j + u_{i-1}^j) + (1 - 2\alpha) u_i^j$. Stable only for $\alpha \le 0.5$.
+  - **Implicit BTCS:** $-\alpha u_{i-1}^{j+1} + (1 + 2\alpha) u_i^{j+1} - \alpha u_{i+1}^{j+1} = u_i^j$. Unconditionally stable; tridiagonal system solved at each step via Thomas Algorithm (TDMA) in $O(N_x)$ time.
+  - **Crank-Nicolson Scheme:** Averages explicit and implicit spatial differences:
+    $$(1 + \alpha) u_i^{j+1} - \frac{\alpha}{2} (u_{i+1}^{j+1} + u_{i-1}^{j+1}) = (1 - \alpha) u_i^j + \frac{\alpha}{2} (u_{i+1}^j + u_{i-1}^j)$$
+    Second-order accurate in both space and time: $O(\Delta t^2 + \Delta x^2)$. Unconditionally stable.
+- **1D Wave Equation (Hyperbolic):** $\frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}$ with Courant number $r = \frac{c \Delta t}{\Delta x}$.
+  - Discretization: $u_i^{j+1} = 2(1 - r^2) u_i^j + r^2(u_{i+1}^j + u_{i-1}^j) - u_i^{j-1}$.
+  - Courant-Friedrichs-Lewy (CFL) stability criterion: $r \le 1.0$.
+- **2D Elliptic Equations (Laplace / Poisson):** $\nabla^2 u = \rho(x, y)$.
+  - 5-point discrete Laplacian stencil with Successive Over-Relaxation (SOR):
+    $$u_{i,j}^{(k+1)} = (1 - \omega) u_{i,j}^{(k)} + \frac{\omega}{4} \left( u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1} - h^2 \rho_{i,j} \right)$$
+    Tuning relaxation parameter $\omega \in (1, 2)$ accelerates spectral convergence.
+
+### 3.10 Eigenvalue Problems (Power Iteration & Deflation)
+- **Problem Formulation:** $A \mathbf{x} = \lambda \mathbf{x}$ for $n \times n$ matrix $A$.
+- **Power Iteration Method:**
+  Repeated matrix-vector multiplication $\mathbf{x}_{k+1} = A \mathbf{x}_k$. If eigenvalues satisfy $|\lambda_1| > |\lambda_2| \ge \dots \ge |\lambda_n|$:
+  $$\mathbf{x}_k = c_1 \lambda_1^k \mathbf{v}_1 + \sum_{i=2}^n c_i \lambda_i^k \mathbf{v}_i \approx c_1 \lambda_1^k \mathbf{v}_1$$
+  Rayleigh quotient for dominant eigenvalue:
+  $$\lambda_1^{(k)} = \frac{A \mathbf{x}_k \cdot \mathbf{y}}{\mathbf{x}_k \cdot \mathbf{y}} \to \lambda_1$$
+  Normalized at every iteration ($\mathbf{x}_k \leftarrow \mathbf{x}_k / \|\mathbf{x}_k\|_2$). Convergence rate scales as $|\lambda_2 / \lambda_1|^k$.
+- **Matrix Deflation for Subdominant Eigenvalues:**
+  For symmetric $A$, eliminate the dominant eigenspace via outer-product subtraction:
+  $$A' = A - \lambda_1 \mathbf{u}_1 \mathbf{u}_1^T, \quad \mathbf{u}_1 = \frac{\mathbf{v}_1}{\|\mathbf{v}_1\|}$$
+  Power iteration on $A'$ yields $\lambda_2$ and $\mathbf{v}_2$.
+- **Analytical Tridiagonal Spectrum:**
+  For a symmetric tridiagonal Toeplitz matrix with subdiagonal $a$, main diagonal $b$, superdiagonal $c$:
+  $$\lambda_k = b + 2\sqrt{ac} \cos\left(\frac{k\pi}{n+1}\right), \quad v_{k,i} = \sin\left(\frac{ik\pi}{n+1}\right), \quad k=1,\dots,n$$
+
+### 3.11 Interpolation & Least Squares Data Fitting
+- **Lagrange Interpolation Formula:**
+  $$P_N(x) = \sum_{i=0}^N y_i \prod_{k \ne i} \frac{x - x_k}{x_i - x_k}$$
+  Polynomial coefficients extracted in ascending order $[c_0, c_1, \dots, c_N]$ using polynomial basis expansion.
+- **Weighted Linear Regression ($y = m x + c$):**
+  Minimizes $\chi^2 = \sum_i w_i (y_i - m x_i - c)^2$ with weights $w_i = 1 / \sigma_i^2$.
+  $$S = \sum w_i, \quad S_x = \sum w_i x_i, \quad S_y = \sum w_i y_i, \quad S_{xx} = \sum w_i x_i^2, \quad S_{xy} = \sum w_i x_i y_i, \quad S_{yy} = \sum w_i y_i^2$$
+  $$\Delta = S S_{xx} - S_x^2, \quad m = \frac{S S_{xy} - S_x S_y}{\Delta}, \quad c = \frac{S_{xx} S_y - S_x S_{xy}}{\Delta}$$
+  Pearson's correlation coefficient:
+  $$r^2 = \frac{(S S_{xy} - S_x S_y)^2}{\Delta (S S_{yy} - S_y^2)}$$
+- **Polynomial Least Squares via Normal Equations:**
+  Fitting $y(x) = \sum_{j=0}^k a_j x^j$ of order $k$ solves $(A^T W A) \mathbf{a} = A^T W \mathbf{y}$, where $A_{ij} = x_i^j$.
+  The normal matrix $M = A^T W A$ is a Hankel matrix: $M_{jl} = \sum_i w_i x_i^{j+l}$. Solved via Doolittle LU decomposition.
+- **Condition Number & Shifted Chebyshev Basis:**
+  Monomial powers $x^j$ produce severely ill-conditioned Hankel matrices as degree $k$ increases ($\kappa(M) = \|M\|_F \|M^{-1}\|_F \gg 10^4$).
+  Replacing monomials with orthogonal polynomials stabilizes the regression. On $[0, 1]$, shifted Chebyshev polynomials $\phi_m(x) = T_m(2x - 1)$ satisfy:
+  $$\phi_0(x) = 1, \quad \phi_1(x) = 2x - 1, \quad \phi_2(x) = 8x^2 - 8x + 1, \quad \phi_3(x) = 32x^3 - 48x^2 + 18x - 1$$
+  Recurrence relation for arbitrary $m \ge 1$:
+  $$\phi_{m+1}(x) = 2(2x - 1) \phi_m(x) - \phi_{m-1}(x)$$
+  Provides orders-of-magnitude reduction in condition number and eliminates numerical instability.
+
 ---
 
 ## 4. Master Library Functions Reference (`mylib.py`)

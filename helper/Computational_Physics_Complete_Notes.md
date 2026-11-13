@@ -1,6 +1,6 @@
 # PHY341/745 — Physics Computer Lab: Complete Master Notes
 
-> Compiled from **all 7 slide decks**: `intro`, `random`, `gaussj`, `ludecomp`, `itermat`, `root`, `integ`.
+> Compiled from **all 10 slide decks**: `intro`, `random`, `gaussj`, `ludecomp`, `itermat`, `root`, `integ`, `diffeq`, `eigv`, `datafit`.
 > Everything your prof taught — every method, equation, algorithm, worked example and exercise — laid out in one place.
 
 **Contents**
@@ -12,6 +12,10 @@
 - [4. Linear Equations III — Iterative Methods: Jacobi, Gauss–Seidel, SOR](#4-linear-equations-iii--iterative-methods-jacobi-gaussseidel-sor)
 - [5. Roots of Nonlinear Equations](#5-roots-of-nonlinear-equations)
 - [6. Numerical Integration](#6-numerical-integration)
+- [7. Ordinary Differential Equations (ODEs)](#7-ordinary-differential-equations-odes)
+- [8. Partial Differential Equations (PDEs)](#8-partial-differential-equations-pdes)
+- [9. Eigenvalues & Eigenvectors](#9-eigenvalues--eigenvectors)
+- [10. Interpolation & Data Fitting](#10-interpolation--data-fitting)
 - [Appendix A — Formula Cheat Sheet](#appendix-a--formula-cheat-sheet)
 - [Appendix B — All Exercises / Tryouts in One List](#appendix-b--all-exercises--tryouts-in-one-list)
 - [Appendix C — Assignments (Repo): Questions & How They're Solved](#appendix-c--assignments-repo-questions--how-theyre-solved)
@@ -1252,6 +1256,275 @@ For $\int_0^\infty$ or $\int_{-\infty}^{\infty}$ instead of $\int_{-1}^{1}$, use
 
 ---
 
+
+---
+
+## 7. Ordinary Differential Equations (ODEs)
+
+> Source: `diffeq.pdf` (Part I) & Course Assignments 7A–7C.
+
+### 7.1 Initial Value Problems (IVPs) & Problem Formulation
+A first-order ordinary differential equation with initial value is given by:
+$$\frac{dy}{dx} = f(x, y), \quad y(x_0) = y_0$$
+The derivative $dy/dx$ defines the slope of the solution curve $y(x)$ at $(x_0, y_0)$.
+
+Higher-order ODEs are converted into coupled systems of first-order ODEs. For example, a 2nd-order equation:
+$$\frac{d^2x}{dt^2} = g(t, x, v) \implies \begin{cases} \frac{dx}{dt} = v \\ \frac{dv}{dt} = g(t, x, v) \end{cases}$$
+State vector $\mathbf{y}(t) = [x(t), v(t)]^T$ is evolved simultaneously.
+
+---
+
+### 7.2 Forward (Explicit) Euler Method
+Based on the forward Taylor expansion about $x_n$:
+$$y(x_n + h) = y(x_n) + h y'(x_n) + \frac{h^2}{2} y''(x_n) + \dots = y_n + h f(x_n, y_n) + O(h^2)$$
+
+- **Algorithm:** $y_{n+1} = y_n + h f(x_n, y_n)$
+- **Order:** Local truncation error $O(h^2)$; global accumulated error $O(h)$ (first-order).
+- **Stability:** Conditionally stable. For test equation $y' = -\lambda y$, numerical stability requires $|1 - h\lambda| \le 1 \implies h \le \frac{2}{\lambda}$. If $h$ exceeds this limit, numerical oscillations explode.
+
+---
+
+### 7.3 Backward (Implicit) Euler Method
+Re-defines $dy/dx$ using the backward difference quotient:
+$$y(x_n + h) = y(x_n) + h f(x_{n+1}, y(x_n + h)) \implies y_{n+1} = y_n + h f(x_{n+1}, y_{n+1})$$
+
+Because $y_{n+1}$ appears on both sides:
+1. **Linear ODEs:** Rearrange analytically for $y_{n+1}$. E.g., for $y' = -\lambda y$:
+   $$y_{n+1} = \frac{y_n}{1 + h\lambda}$$
+   Unconditionally stable for all $h > 0$ since $|1 + h\lambda| > 1$.
+2. **Non-Linear ODEs:** Solved at each time step using 1D Newton-Raphson:
+   $$g(y) = y - y_n - h f(x_{n+1}, y) = 0, \quad g'(y) = 1 - h \frac{\partial f}{\partial y}(x_{n+1}, y)$$
+
+---
+
+### 7.4 Heun's Predictor-Corrector Method
+Combines forward Euler prediction with trapezoidal slope averaging:
+1. **Predictor (Forward Euler):**
+   $$y_{n+1}^p = y_n + h f(x_n, y_n)$$
+2. **Corrector (Trapezoidal Average):**
+   $$y_{n+1} = y_n + \frac{h}{2} \left[ f(x_n, y_n) + f(x_{n+1}, y_{n+1}^p) \right]$$
+- **Global Error:** $O(h^2)$ (second-order accuracy). Significantly more accurate than simple Forward Euler with minimal overhead (two function evaluations per step).
+
+---
+
+### 7.5 Runge-Kutta 4th-Order (RK4) Method
+The gold standard for initial-value problems. Evaluates four trial slopes across the step $[x_n, x_n + h]$ and combines them with Simpson's 1/3-rule weights $(1, 2, 2, 1)$:
+
+$$\begin{aligned}
+k_1 &= f(x_n, y_n) && \text{(slope at beginning)} \\
+k_2 &= f\left(x_n + \frac{h}{2}, y_n + \frac{h}{2} k_1\right) && \text{(midpoint slope via } k_1 \text{)} \\
+k_3 &= f\left(x_n + \frac{h}{2}, y_n + \frac{h}{2} k_2\right) && \text{(midpoint slope via } k_2 \text{)} \\
+k_4 &= f(x_n + h, y_n + h k_3) && \text{(endpoint slope via } k_3 \text{)}
+\end{aligned}$$
+
+**Weighted Update:**
+$$y_{n+1} = y_n + \frac{h}{6} (k_1 + 2k_2 + 2k_3 + k_4)$$
+- **Accuracy:** Fourth order $O(h^4)$ global error, $O(h^5)$ local truncation error.
+- **Vector Formulation:** Evaluates vectors $\mathbf{k}_1, \mathbf{k}_2, \mathbf{k}_3, \mathbf{k}_4 \in \mathbb{R}^m$ for coupled dynamical systems.
+
+---
+
+### 7.6 Coupled ODE Applications
+1. **Damped Simple Harmonic Oscillator:**
+   $$\ddot{x} + \mu \dot{x} + \omega^2 x = 0, \quad x(0) = x_0, \; v(0) = v_0$$
+   Total mechanical energy $E(t) = \frac{1}{2} m v^2 + \frac{1}{2} k x^2$. RK4 accurately captures both exponential amplitude decay and energy dissipation $\frac{dE}{dt} = -m \mu v^2 \le 0$.
+2. **Chaotic Dynamics (Rössler Attractor):**
+   $$\frac{dx}{dt} = -y - z, \quad \frac{dy}{dt} = x + ay, \quad \frac{dz}{dt} = b + z(x - c)$$
+   For $a = 0.2, b = 0.2, c = 5.7$, RK4 traces a strange attractor with sensitive dependence on initial conditions.
+
+---
+
+### 7.7 Two-Point Boundary Value Problems (BVPs) & Shooting Method
+Given $y'' = f(x, y, y')$ with Dirichlet boundary conditions $y(a) = \alpha, y(b) = \beta$:
+1. Convert to IVP by guessing the initial slope $z = y'(a)$.
+2. Pick two trial slopes $z_1$ and $z_2$, and integrate using RK4 to obtain boundary values $y(b; z_1)$ and $y(b; z_2)$.
+3. Use linear interpolation (Lagrange formula) to find the exact initial slope $z^*$:
+   $$z^* = z_1 + (z_2 - z_1) \frac{\beta - y(b; z_1)}{y(b; z_2) - y(b; z_1)}$$
+4. One final RK4 integration with $y'(a) = z^*$ satisfies the target boundary condition $y(b) = \beta$ exactly (for linear ODEs; iterative shooting for non-linear ODEs).
+
+---
+
+### 7.8 1D Finite Element Method (FEM)
+Solves boundary value problems (e.g. Poisson $y''(x) = f(x)$ on $[a, b]$, $y(a) = y_a, y(b) = y_b$) by minimizing the energy functional / weak variational form:
+$$\int_a^b \left( -y'(x) v'(x) - f(x) v(x) \right) dx = 0$$
+Using piecewise linear hat functions $\phi_i(x)$ on a mesh of $n$ elements:
+$$K \mathbf{y}_{\text{int}} = \mathbf{F}$$
+Stiffness matrix $K$ is symmetric positive-definite tridiagonal:
+$$K_{ii} = \frac{2}{h}, \quad K_{i, i\pm 1} = -\frac{1}{h}$$
+Solved efficiently and stably using Cholesky factorization ($K = L L^T$).
+
+---
+
+## 8. Partial Differential Equations (PDEs)
+
+> Source: `diffeq.pdf` (Part II) & Assignment 7D.
+
+### 8.1 PDE Classification
+- **Parabolic:** $\frac{\partial u}{\partial t} = D \frac{\partial^2 u}{\partial x^2}$ (Heat / diffusion equations; dissipation, smoothing).
+- **Hyperbolic:** $\frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}$ (Wave equations; wave propagation, finite speed $c$).
+- **Elliptic:** $\nabla^2 u = \rho(x, y)$ (Laplace / Poisson equations; steady-state equilibrium, boundary-driven).
+
+---
+
+### 8.2 1D Heat Equation: Explicit FTCS Scheme
+Discretizing $u_t = u_{xx}$ with spatial step $h_x = L / N_x$ and time step $h_t = T / N_t$:
+$$\frac{u_i^{j+1} - u_i^j}{h_t} = \frac{u_{i+1}^j - 2 u_i^j + u_{i-1}^j}{h_x^2}$$
+$$u_i^{j+1} = \alpha (u_{i+1}^j + u_{i-1}^j) + (1 - 2\alpha) u_i^j, \quad \alpha = \frac{h_t}{h_x^2}$$
+
+- **Von Neumann Stability Analysis:** Substituting Fourier mode $u_i^j = \xi^j e^{I k i h_x}$ yields amplification factor $\xi = 1 - 4\alpha \sin^2(k h_x / 2)$.
+- **Stability Criterion:** $|\xi| \le 1 \iff \alpha \le 0.5$. If $\alpha > 0.5$, high-frequency modes explode with alternating sign oscillations.
+
+---
+
+### 8.3 1D Heat Equation: Implicit BTCS Scheme & Thomas Algorithm
+Backward-Time Central-Space evaluates the second spatial derivative at the forward time level $j+1$:
+$$\frac{u_i^{j+1} - u_i^j}{h_t} = \frac{u_{i+1}^{j+1} - 2 u_i^{j+1} + u_{i-1}^{j+1}}{h_x^2}$$
+$$-\alpha u_{i-1}^{j+1} + (1 + 2\alpha) u_i^{j+1} - \alpha u_{i+1}^{j+1} = u_i^j$$
+
+- **Stability:** Unconditionally stable for all $\alpha > 0$.
+- **Solution Method:** Forms a strictly diagonally dominant tridiagonal system:
+  $$\begin{bmatrix} 1+2\alpha & -\alpha & & \\ -\alpha & 1+2\alpha & -\alpha & \\ & \ddots & \ddots & \ddots \end{bmatrix} \begin{bmatrix} u_1^{j+1} \\ u_2^{j+1} \\ \vdots \end{bmatrix} = \mathbf{d}^j$$
+  Solved in $O(N_x)$ time via the **Thomas Algorithm (TDMA)**:
+  1. Forward sweep: $c'_0 = c_0 / b_0$, $c'_i = c_i / (b_i - a_i c'_{i-1})$; $d'_0 = d_0 / b_0$, $d'_i = (d_i - a_i d'_{i-1}) / (b_i - a_i c'_{i-1})$.
+  2. Back substitution: $x_{n-1} = d'_{n-1}$, $x_i = d'_i - c'_i x_{i+1}$.
+
+---
+
+### 8.4 Crank-Nicolson Scheme
+Averages explicit (level $j$) and implicit (level $j+1$) spatial differences:
+$$\frac{u_i^{j+1} - u_i^j}{h_t} = \frac{1}{2} \left[ \frac{u_{i+1}^{j+1} - 2u_i^{j+1} + u_{i-1}^{j+1}}{h_x^2} + \frac{u_{i+1}^j - 2u_i^j + u_{i-1}^j}{h_x^2} \right]$$
+$$-\frac{\alpha}{2} u_{i-1}^{j+1} + (1 + \alpha) u_i^{j+1} - \frac{\alpha}{2} u_{i+1}^{j+1} = \frac{\alpha}{2} u_{i-1}^j + (1 - \alpha) u_i^j + \frac{\alpha}{2} u_{i+1}^j$$
+
+- **Accuracy:** Second order in time and space: $O(h_t^2 + h_x^2)$.
+- **Stability:** Unconditionally stable for all $\alpha > 0$.
+- **Matrix Evolution Form:** $A \mathbf{u}^{j+1} = B \mathbf{u}^j + \mathbf{b}_{\text{bc}} \implies \mathbf{u}^{j+1} = (A^{-1} B) \mathbf{u}^j + A^{-1} \mathbf{b}_{\text{bc}}$.
+
+---
+
+### 8.5 1D Hyperbolic Wave Equation
+$$u_{tt} = c^2 u_{xx}, \quad u(x, 0) = u_0(x), \; u_t(x, 0) = v_0(x)$$
+Central differences in both time and space:
+$$\frac{u_i^{j+1} - 2 u_i^j + u_i^{j-1}}{h_t^2} = c^2 \frac{u_{i+1}^j - 2 u_i^j + u_{i-1}^j}{h_x^2}$$
+$$u_i^{j+1} = 2(1 - r^2) u_i^j + r^2(u_{i+1}^j + u_{i-1}^j) - u_i^{j-1}, \quad r = \frac{c h_t}{h_x}$$
+
+- **Courant-Friedrichs-Lewy (CFL) Condition:** $r = c h_t / h_x \le 1.0$. The numerical domain of dependence must contain the physical domain of dependence. If $r > 1$, energy grows without bound.
+- **First Step ($j = 1$):** Taylor expansion using velocity: $u_i^1 = u_i^0 + h_t v_0(x_i) + \frac{1}{2} r^2 (u_{i+1}^0 - 2 u_i^0 + u_{i-1}^0)$.
+
+---
+
+### 8.6 2D Elliptic Equations (Laplace / Poisson)
+$$\nabla^2 u = u_{xx} + u_{yy} = \rho(x, y)$$
+5-point finite-difference stencil on square grid ($h_x = h_y = h$):
+$$u_{i+1, j} + u_{i-1, j} + u_{i, j+1} + u_{i, j-1} - 4 u_{i, j} = h^2 \rho_{i, j}$$
+Solved using Successive Over-Relaxation (SOR):
+$$u_{i, j}^{(k+1)} = (1 - \omega) u_{i, j}^{(k)} + \frac{\omega}{4} \left( u_{i+1, j}^{(k)} + u_{i-1, j}^{(k+1)} + u_{i, j+1}^{(k)} + u_{i, j-1}^{(k+1)} - h^2 \rho_{i, j} \right)$$
+Optimal $\omega \in (1, 2)$ reduces iteration counts by an order of magnitude.
+
+---
+
+## 9. Eigenvalues & Eigenvectors
+
+> Source: `eigv.pdf` & Assignment 8.
+
+### 9.1 The Algebraic Eigenvalue Problem
+For an $n \times n$ matrix $A$:
+$$A \mathbf{x} = \lambda \mathbf{x} \iff (A - \lambda I) \mathbf{x} = \mathbf{0}$$
+Analytically solved via the characteristic polynomial $p_A(\lambda) = \det(A - \lambda I) = 0$. However:
+> **Word of wisdom (from lecture):** In general, eigenvalues cannot be determined using a finite number of rational operations (Abel-Ruffini theorem for $n \ge 5$). Numerical methods must be iterative.
+
+Small changes in general matrices can cause massive changes in eigenvalues. If $A$ is **symmetric**, eigenvalues are well-conditioned and robust against perturbations.
+
+---
+
+### 9.2 Power Iteration Method
+An iterative algorithm designed to isolate the **dominant eigenvalue** (largest in absolute magnitude $|\lambda_1| > |\lambda_2| \ge \dots$) and its eigenvector $\mathbf{v}_1$.
+
+#### Algorithm:
+1. Start with initial guess $\mathbf{x}_0$ (not orthogonal to $\mathbf{v}_1$). Normalize: $\mathbf{x}_0 \leftarrow \mathbf{x}_0 / \|\mathbf{x}_0\|_2$.
+2. Repeated multiplication: $\mathbf{x}_{k+1} = A \mathbf{x}_k$.
+3. Expand in eigenvector basis:
+   $$\mathbf{x}_k = c_1 \lambda_1^k \mathbf{v}_1 + c_2 \lambda_2^k \mathbf{v}_2 + \dots = \lambda_1^k \left[ c_1 \mathbf{v}_1 + c_2 \left( \frac{\lambda_2}{\lambda_1} \right)^k \mathbf{v}_2 + \dots \right]$$
+   As $k \to \infty$, since $|\lambda_2 / \lambda_1| < 1$, all subdominant components vanish.
+4. **Rayleigh Quotient:** Evaluates $\lambda_1$ using test vector $\mathbf{y}$ (typically $\mathbf{y} = \mathbf{x}_k$):
+   $$\lambda_1^{(k)} = \frac{A \mathbf{x}_k \cdot \mathbf{y}}{\mathbf{x}_k \cdot \mathbf{y}} = \frac{\mathbf{x}_{k+1} \cdot \mathbf{y}}{\mathbf{x}_k \cdot \mathbf{y}}$$
+5. Normalize $\mathbf{x}_{k+1} \leftarrow \mathbf{x}_{k+1} / \|\mathbf{x}_{k+1}\|_2$ at **every step** to avoid floating-point overflow.
+6. Stop when $|\lambda_1^{(k)} - \lambda_1^{(k-1)}| < \epsilon$.
+
+---
+
+### 9.3 Matrix Deflation for Subdominant Eigenvalues
+Once $\lambda_1$ and normalized eigenvector $\mathbf{u}_1 = \mathbf{v}_1 / \|\mathbf{v}_1\|_2$ are known, deflate the matrix by subtracting the dominant projection:
+$$A' = A - \lambda_1 \mathbf{u}_1 \mathbf{u}_1^T$$
+- **Property:** $A'$ has eigenvalues $0, \lambda_2, \lambda_3, \dots, \lambda_n$ with the same eigenvectors as $A$.
+- Power iteration on $A'$ converges to the second dominant eigenvalue $\lambda_2$.
+- *Caution:* Deflation beyond $\lambda_2$ accumulates roundoff error; QR iteration or Jacobi eigenvalue methods are preferred for full spectra.
+
+---
+
+### 9.4 Tridiagonal Toeplitz Spectrum (Analytical Benchmark)
+For an $n \times n$ symmetric tridiagonal matrix with subdiagonal $a$, main diagonal $b$, and superdiagonal $c = a$:
+$$\lambda_k = b + 2\sqrt{ac} \cos\left( \frac{k\pi}{n + 1} \right), \quad v_{k, i} = \sin\left( \frac{ik\pi}{n + 1} \right), \quad k = 1, \dots, n$$
+For $a = c = -1, b = 2, n = 5$:
+- $k=1$: $\lambda_1 = 2 + 2\cos(\pi/6) = 2 + \sqrt{3} \approx 3.732051$
+- $k=2$: $\lambda_2 = 2 + 2\cos(2\pi/6) = 2 + 1 = 3.000000$
+- $k=3$: $\lambda_3 = 2 + 2\cos(3\pi/6) = 2.000000$
+
+---
+
+## 10. Interpolation & Data Fitting
+
+> Source: `datafit.pdf` & Assignments 9A–9B.
+
+### 10.1 Lagrange Interpolation
+Given $N+1$ points $(x_0, y_0), (x_1, y_1), \dots, (x_N, y_N)$ with distinct $x_i$, the unique polynomial $P_N(x)$ of degree $\le N$ passing through all points is:
+$$P_N(x) = \sum_{i=0}^N y_i \ell_i(x), \quad \ell_i(x) = \prod_{k \ne i} \frac{x - x_k}{x_i - x_k}$$
+- **Kronecker Property:** $\ell_i(x_j) = \delta_{ij} \implies P_N(x_i) = y_i$.
+- Polynomial coefficients in ascending power order $[c_0, c_1, \dots, c_N]$ where $P_N(x) = \sum c_m x^m$ are extracted via polynomial convolution.
+
+---
+
+### 10.2 Principle of Weighted Least Squares
+When fitting experimental data $(x_i, y_i)$ with measurement uncertainties $\sigma_i$, we minimize the chi-square sum:
+$$\chi^2 = \sum_{i=1}^N \left( \frac{y_i - f(x_i; \mathbf{a})}{\sigma_i} \right)^2 = \sum_{i=1}^N w_i \left( y_i - f(x_i; \mathbf{a}) \right)^2, \quad w_i = \frac{1}{\sigma_i^2}$$
+
+---
+
+### 10.3 Linear Regression ($y = mx + c$)
+Minimizing $\chi^2$ with respect to slope $m$ and intercept $c$:
+$$\begin{aligned}
+S &= \sum w_i, & S_x &= \sum w_i x_i, & S_y &= \sum w_i y_i \\
+S_{xx} &= \sum w_i x_i^2, & S_{xy} &= \sum w_i x_i y_i, & S_{yy} &= \sum w_i y_i^2
+\end{aligned}$$
+$$\Delta = S S_{xx} - S_x^2, \quad m = \frac{S S_{xy} - S_x S_y}{\Delta}, \quad c = \frac{S_{xx} S_y - S_x S_{xy}}{\Delta}$$
+
+**Pearson Correlation Coefficient ($r^2$):**
+$$r^2 = \frac{(S S_{xy} - S_x S_y)^2}{\Delta (S S_{yy} - S_y^2)}$$
+Linearized fitting for non-linear physical models:
+- **Power law:** $y = a x^b \implies \ln y = \ln a + b \ln x$
+- **Exponential:** $y = a e^{-bx} \implies \ln y = \ln a - b x$
+Comparing $r^2$ identifies which physical model best captures the data.
+
+---
+
+### 10.4 Polynomial Least Squares & Normal Equations
+Fitting polynomial $P_k(x) = \sum_{j=0}^k a_j x^j$ of order $k$:
+$$(A^T W A) \mathbf{a} = A^T W \mathbf{y}$$
+- $A \in \mathbb{R}^{N \times (k+1)}$ is the Vandermonde design matrix: $A_{ij} = x_i^j$.
+- $M = A^T W A$ is the **Hankel normal matrix**:
+  $$M_{jl} = \sum_{i=1}^N w_i x_i^{j+l}, \quad b_j = \sum_{i=1}^N w_i y_i x_i^j$$
+Solved directly using Doolittle LU decomposition without computing matrix inverse.
+
+---
+
+### 10.5 Matrix Ill-Conditioning & Shifted Chebyshev Basis
+As polynomial degree $k$ increases, monomial powers $1, x, x^2, x^3, \dots$ become nearly linearly dependent on $[0, 1]$.
+- **Frobenius Condition Number:** $\kappa(M) = \|M\|_F \|M^{-1}\|_F$. For standard monomials with $k=3$, $\kappa(M) \sim 10^4 - 10^6$.
+- **Shifted Chebyshev Polynomials:** Defined on $[0, 1]$ via $T_m^*(x) = T_m(2x - 1)$:
+  $$\phi_0(x) = 1, \quad \phi_1(x) = 2x - 1, \quad \phi_2(x) = 8x^2 - 8x + 1, \quad \phi_3(x) = 32x^3 - 48x^2 + 18x - 1$$
+- **Recurrence Relation:**
+  $$\phi_{m+1}(x) = 2(2x - 1) \phi_m(x) - \phi_{m-1}(x)$$
+- **Condition Number Benefit:** The normal matrix formed using Chebyshev basis functions has condition number orders of magnitude lower than the monomial Hankel matrix, preventing catastrophic loss of precision.
+
 ## Appendix A — Formula Cheat Sheet
 
 ### Random
@@ -1298,6 +1571,36 @@ For $\int_0^\infty$ or $\int_{-\infty}^{\infty}$ instead of $\int_{-1}^{1}$, use
 - Simpson: $S_N=\frac h3[f_0+4f_1+2f_2+\cdots+4f_{N-1}+f_N]$, error $\le(b-a)^5|f''''|_{\max}/180N^4$; $N$ even; $S_{2N}=\frac23M_N+\frac13T_N$.
 - Monte Carlo: $F_N=\frac{b-a}{N}\sum f(X_i)$; $X=a+(b-a)\xi$; $\sigma\sim1/\sqrt N$.
 - Gauss–Legendre on $[a,b]$: $\frac{b-a}{2}\sum w_n f(\frac{b-a}{2}x_n+\frac{b+a}{2})$; exact to degree $2n-1$.
+
+### ODEs
+
+- Explicit Forward Euler: $y_{n+1}=y_n+h f(x_n,y_n)$; $O(h)$ global; conditional stability $|1+h\lambda|\le 1$.
+- Implicit Backward Euler: $y_{n+1}=y_n+h f(x_{n+1},y_{n+1})$; solve via Newton $g(y)=y-y_n-hf(x_{n+1},y)=0$; unconditionally stable.
+- Heun's PC: $y_{n+1}^p=y_n+hf_n$, $y_{n+1}=y_n+\frac h2[f_n+f(x_{n+1},y_{n+1}^p)]$; $O(h^2)$ global.
+- RK4: $k_1=f(x_n,y_n)$, $k_2=f(x_n+h/2,y_n+hk_1/2)$, $k_3=f(x_n+h/2,y_n+hk_2/2)$, $k_4=f(x_n+h,y_n+hk_3)$; $y_{n+1}=y_n+\frac h6(k_1+2k_2+2k_3+k_4)$; $O(h^4)$.
+- Shooting method slope interpolation: $z^*=z_1+(z_2-z_1)[\beta-y(b;z_1)]/[y(b;z_2)-y(b;z_1)]$.
+- 1D FEM Poisson: $K_{ii}=2/h, K_{i,i\pm 1}=-1/h$; solve $K y = F$ via Cholesky $K=LL^T$.
+
+### PDEs
+
+- 1D Heat FTCS: $u_i^{j+1}=\alpha(u_{i+1}^j+u_{i-1}^j)+(1-2\alpha)u_i^j$; $\alpha=h_t/h_x^2\le 0.5$ stability.
+- 1D Heat BTCS: $-\alpha u_{i-1}^{j+1}+(1+2\alpha)u_i^{j+1}-\alpha u_{i+1}^{j+1}=u_i^j$; unconditionally stable; TDMA in $O(N)$.
+- Crank-Nicolson: $-\frac\alpha2 u_{i-1}^{j+1}+(1+\alpha)u_i^{j+1}-\frac\alpha2 u_{i+1}^{j+1}=\frac\alpha2 u_{i-1}^j+(1-\alpha)u_i^j+\frac\alpha2 u_{i+1}^j$; $O(h_t^2+h_x^2)$.
+- 1D Wave explicit: $u_i^{j+1}=2(1-r^2)u_i^j+r^2(u_{i+1}^j+u_{i-1}^j)-u_i^{j-1}$; CFL $r=ch_t/h_x\le 1$.
+- Thomas algorithm (TDMA): $c'_i=c_i/(b_i-a_i c'_{i-1})$, $d'_i=(d_i-a_i d'_{i-1})/(b_i-a_i c'_{i-1})$; $x_i=d'_i-c'_i x_{i+1}$.
+
+### Eigenvalues
+
+- Power iteration: $x_{k+1}=A x_k$; Rayleigh quotient $\lambda_1=(A x_k \cdot y)/(x_k \cdot y)$; normalize $x_{k+1}/\|x_{k+1}\|_2$; error scales as $|\lambda_2/\lambda_1|^k$.
+- Deflation: $A'=A-\lambda_1 u_1 u_1^T$ where $u_1=v_1/\|v_1\|_2$.
+- Tridiagonal spectrum: $\lambda_k=b+2\sqrt{ac}\cos[k\pi/(n+1)]$, $v_{k,i}=\sin[ik\pi/(n+1)]$.
+
+### Data Fitting
+
+- Lagrange interpolation: $P_N(x)=\sum y_i \prod_{k\ne i}(x-x_k)/(x_i-x_k)$.
+- Weighted linear regression: $m=(S S_{xy}-S_x S_y)/\Delta$, $c=(S_{xx} S_y-S_x S_{xy})/\Delta$; $\Delta=S S_{xx}-S_x^2$; $r^2=(S S_{xy}-S_x S_y)^2/[\Delta(S S_{yy}-S_y^2)]$.
+- Polynomial normal equations: $(A^TW A)a=A^TWy$; Hankel matrix $M_{jl}=\sum w_i x_i^{j+l}$; condition number $\kappa(M)=\|M\|_F \|M^{-1}\|_F$.
+- Shifted Chebyshev basis on $[0,1]$: $\phi_0=1, \phi_1=2x-1, \phi_{m+1}=2(2x-1)\phi_m-\phi_{m-1}$.
 
 ---
 
@@ -1982,22 +2285,132 @@ Difference = 0.0, Relative error = 0.0
 
 ---
 
-### C.11 Master map: which repo question tests which slide section
+---
 
-| Repo folder | Questions | Slide sections |
-|---|---|---|
-| `Assgn0` / `week00_warmup` | loops, series, matrix I/O, complex class | §0 (programming rules) |
-| `assign1_rand` | logistic map, LCG, π, decay, exponential | §1.2–1.9 |
-| `assign2_gj_lu` | GJ library, $3\times3$ solve, LU verify | §2.2–2.8, §3.1–3.3 |
-| `assign3_lu_chsk` | forback library, $6\times6$ LU solve, Cholesky | §3.6–3.8 |
-| `assign4_jac_gs` | Jacobi/GS/SOR library, $6\times6$, SOR $\omega=1.57$ | §4.2–4.4 |
-| `assign5_bi_rf` | Bis/RF library, log−sin root, auto-bracket Dottie | §5.2–5.3 |
-| `assign5_fx_nr` | FP/NR library, 3-method race, FP quadratic, $2\times2$ system | §5.4–5.6 |
-| `assign5_poly` | Laguerre+deflation library, 3 polynomials | §5.7 |
-| `assign6_midtrap` | Mid/Trap library, 3 integrals × 4 $N$ | §6.3–6.4 |
-| `assign6b_simmc` | Simpson/MC library, error-bound $N$, MC $\sin^2$ | §6.5–6.7 |
-| `assign6c_gq` | Legendre+Laguerre library, 3 GQ integrals | §6.8 |
+### C.11 Mid-Semester Examination — `Midsem/`
+
+#### C.11.1 Q1 — Microscopic Particle Diffusion (Ehrenfest Model)
+- **Problem:** Simulate $N = 5000$ particles initially in the left compartment ($N_L = N, N_R = 0$) diffusing through a small hole over 30,000 steps.
+- **Method:** LCG pseudo-random choice of particle $i \in [0, N-1]$ uniformly. State array toggles compartment.
+- **Result:** $N_L(t)$ exponentially relaxes from 5000 towards macroscopic equilibrium ($N/2 = 2500$) with statistical fluctuations $\sim \sqrt{N} \approx 50$. Saved in `equilibrium.png`.
+
+#### C.11.2 Q2 — Matrix Inversion via Doolittle LU Decomposition
+- **Problem:** Find the inverse of a $5 \times 5$ matrix `midsem_mat1` using LU decomposition, verifying non-zero determinant.
+- **Method:** $A = L U$ factorization, determinant $\det(A) = \prod U_{ii} = 68.717 \ne 0$. Column-by-column forward/backward solve $A \mathbf{x}_j = \mathbf{e}_j$.
+- **Result:** Computed $A^{-1}$ rounded to 3 decimal places matching `output2.txt`.
+
+#### C.11.3 Q3 — Wien's Displacement Law via Newton-Raphson
+- **Problem:** Solve transcendental equation $(x - 5)e^x + 5 = 0$ for $x = hc / (\lambda_{\max} k T)$ to compute Wien's constant $b$.
+- **Method:** 1D Newton-Raphson with $f(x) = (x - 5)e^x + 5$ and $f'(x) = (x - 4)e^x$.
+- **Result:** Root converges to $x = 4.965114$. Wien's constant $b = hc / (x k) = 2.8978 \times 10^{-3} \text{ m}\cdot\text{K}$ matching CODATA value.
+
+#### C.11.4 Q4 — Non-Uniform Beam Center of Mass via Midpoint Rule
+- **Problem:** 2 m beam with density $\lambda(x) = x^2$. Find center of mass $x_{\text{cm}} = \int x \lambda dx / \int \lambda dx$ to 4 decimal places.
+- **Method:** Composite midpoint rule with $N$ determined from error bound formulas ($N_1 = 116, N_2 = 200$).
+- **Result:** Mass $M = 2.6667$, Moment $= 4.0000$, $x_{\text{cm}} = 1.5000\text{ m}$ (exact analytical value is $3L/4 = 1.5\text{ m}$).
+
+#### C.11.5 Q5 — Ground State Hydrogen $\langle r \rangle$ via Gauss-Legendre Quadrature
+- **Problem:** Compute expectation value $\langle r \rangle = \int_0^\infty 4 u^3 e^{-2u} du$ using radial wavefunction $R_{10}(r)$.
+- **Method:** 6-point Gauss-Legendre quadrature with upper cutoff $b = 6.0 a_0$ where probability density decays below $10^{-4}$.
+- **Result:** $\langle r \rangle = 1.5000 a_0$ (exact quantum mechanical value is $\frac{3}{2} a_0$).
 
 ---
 
-*End of master notes — covers all 7 PDFs + full assignment repo walkthrough. Good luck for midsem/endsem!*
+### C.12 Differential Equations I (Euler & Predictor-Corrector) — `assign7a_fwbk/`
+
+- **Problem:** Solve $dy/dx = y - x^2$ ($y(0)=0$) and $dy/dx = (x+y)^2$ ($y(0)=1$) using Forward Euler, Backward Euler, and Predictor-Corrector across step sizes $h \in \{0.02, 0.1, 0.3, 0.5\}$.
+- **Method:**
+  - Forward Euler: $y_{i+1} = y_i + h f(x_i, y_i)$
+  - Backward Euler: Implicit step solved via Newton-Raphson at each increment.
+  - Predictor-Corrector: Heun's slope averaging.
+- **Findings:** Forward Euler oscillates and drifts significantly at $h = 0.5$; Backward Euler remains stable but introduces damping; Predictor-Corrector maintains high fidelity across all tested step sizes.
+
+---
+
+### C.13 Differential Equations II (Runge-Kutta 4th Order) — `assign7b_rk4/`
+
+- **Q1 (Library):** Unified `rk4` implementation supporting both scalar ODEs and coupled first-order vector systems.
+- **Q2:** Solution of $dy/dx = (x+y)^2$ compared against analytical $\tan(x + \pi/4) - x$ on $[0, \pi/5]$ with $h = 0.05, 0.15$.
+- **Q3 (Damped SHO):** $\ddot{x} + \mu \dot{x} + \omega^2 x = 0$ ($k=1, m=1, \mu=0.15$) integrated over $t \in [0, 40]$. Generated phase portraits and energy decay curve $E(t)$.
+- **Q4 (Chaotic Dynamics):** 3D integration of the Rössler attractor ($a=0.2, b=0.2, c=5.7$), producing the characteristic folded single-band strange attractor plot (`q4_rossler.png`).
+
+---
+
+### C.14 Boundary Value Problems & FEM — `assign7c_sht/`
+
+- **Q1 (Beam Deflection):** Cantilever beam under load $q = 5000 \text{ N/m}$, Young's modulus $Y = 2 \times 10^{11} \text{ N/m}^2$. Solved via Shooting Method with RK4 + Lagrange interpolation to match $y(L) = 0$. Computed maximum depression $y_{\max} = -1.2500 \times 10^{-3} \text{ m}$ at midpoint $x = 1.0\text{ m}$.
+- **Q2 (Heat Conduction):** Uninsulated rod with ambient heat dissipation $T'' + \alpha(T_a - T) = 0$, $T(0)=40^\circ\text{C}, T(10)=200^\circ\text{C}$. Shooting method determines location where $T = 100^\circ\text{C}$ ($x = 6.32\text{ m}$).
+- **Q3 (1D FEM):** Steady-state Poisson $y''(x) = -2$, $y(0)=1, y(1)=3$ solved via Finite Element Method using piecewise linear hat functions and Cholesky decomposition. Matches analytical $y(x) = -x^2 + 3x + 1$ exactly at grid nodes.
+
+---
+
+### C.15 Partial Differential Equations — `assign7d_felem/`
+
+- **Q1 (Explicit FTCS):** 1D Heat equation $u_t = u_{xx}$ with $u(x, 0) = 20|\sin(\pi x)|$ on a metal rod of length 2. Position grid $N_x = 20$, time grid $N_t = 2000$. Verified stability condition $\alpha = h_t / h_x^2 = 0.2 \le 0.5$. Visualized thermal decay profiles across time steps.
+- **Q2 (Crank-Nicolson):** Convection-diffusion-reaction PDE $u_t = a u_{xx} + b u_x + c u$ ($a=2, b=-1, c=1$) with initial profile $u(x, 0) = 2 + x^2$ and boundary conditions $u(0, t)=2, u(1, t)=3$. Formulated matrix system $A \mathbf{u}^{j+1} = B \mathbf{u}^j + \mathbf{b}_{\text{bc}}$ and solved over 5000 time steps. Saved in `crank_nicolson_lines.png` and contour map.
+
+---
+
+### C.16 Eigenvalue Problems — `assign8_eval/`
+
+- **Q1 (Library):** Power Iteration with Rayleigh quotient and automatic normalization at each iteration.
+- **Q2:** Applied to $4 \times 4$ matrix `asgn8_mat1`:
+  $$\text{Dominant eigenvalue } \lambda_1 = 8.000000, \quad \mathbf{v}_1 = [0.0, 0.0, 0.707107, 0.707107]^T$$
+- **Q3:** 5x5 tridiagonal Toeplitz matrix `asgn8_mat2`:
+  - First eigenvalue $\lambda_1 = 3.732051$, eigenvector $\mathbf{v}_1 = [0.288675, -0.5, 0.57735, -0.5, 0.288675]^T$.
+  - Matrix deflation $A' = A - \lambda_1 \mathbf{u}_1 \mathbf{u}_1^T$ isolates second eigenvalue $\lambda_2 = 3.000000$, eigenvector $\mathbf{v}_2 = [-0.5, 0.5, 0.0, -0.5, 0.5]^T$.
+  - Perfect agreement with analytical formula $\lambda_k = 2 + 2\cos(k\pi/6)$.
+
+---
+
+### C.17 Interpolation & Model Comparison — `assign9a_fit/`
+
+- **Q1 (Library):** Lagrange interpolation returning both estimated value $y(x)$ and ascending polynomial coefficients $[c_0, c_1, \dots, c_n]$.
+- **Q2 (Library):** Weighted linear regression returning slope, intercept, and Pearson correlation coefficient $r^2$.
+- **Q3:** Lagrange interpolation on 5 data points estimating $y(6.7) = 33.500000$ with explicit coefficients printed.
+- **Q4 (Model Race):** Experimental data fitted against Power Law ($y = a x^b$) vs. Exponential ($y = a e^{-bx}$):
+  - Power Law: $a = 21.78, b = -0.53, R^2 = 0.9926$
+  - Exponential: $a = 12.01, b = 0.05, R^2 = 0.9234$
+  - Conclusion: Power Law provides significantly superior fit ($R^2 = 0.9926 > 0.9234$).
+
+---
+
+### C.18 Polynomial & Chebyshev Regression — `assign9b_fit/`
+
+- **Q1 (Library):** Polynomial least squares of arbitrary order $k$ via normal equations, returning coefficients, Hankel matrix, and Frobenius condition number.
+- **Q2 (Library):** Shifted Chebyshev basis regression on $[0, 1]$ using $\phi_m(x) = T_m(2x - 1)$.
+- **Q3:** Cubic polynomial least squares on experimental dataset `assign9fit.txt`. Hankel matrix condition number $= 3.32 \times 10^4$.
+- **Q4 (Stability Benchmark):** Comparative study:
+  - Standard Monomial Hankel condition number: $\kappa = 33241.6$
+  - Shifted Chebyshev matrix condition number: $\kappa = 14.8$
+  - *Takeaway:* Orthogonal Chebyshev basis reduces ill-conditioning by over 3 orders of magnitude while yielding identical analytical curves.
+
+---
+
+### C.19 Complete Master Map: Repo Folders vs. Slide Sections
+
+| Repo Folder | Topic / Routines | Slide Deck Reference |
+|---|---|---|
+| `Assgn0` | Loops, series sums, file I/O, `MyComplex` | `intro.pdf` |
+| `assign1_rand` | LCG, $\pi$, radioactive decay, exponential sampling | `random.pdf` |
+| `assign2_gj_lu` | Gauss-Jordan pivoting, inversion, LU decomposition | `gaussj.pdf`, `ludecomp.pdf` |
+| `assign3_lu_chsk` | Forward/backward substitution, $6 \times 6$ LU, Cholesky | `ludecomp.pdf` |
+| `assign4_jac_gs` | Jacobi, Gauss-Seidel, SOR relaxation ($\omega = 1.57$) | `itermat.pdf` |
+| `assign5_bi_rf` | Root bracketing, Bisection, Regula Falsi | `root.pdf` |
+| `assign5_fx_nr` | Fixed-point, 1D & Multivariate Newton-Raphson | `root.pdf` |
+| `assign5_poly` | Horner's scheme, Laguerre roots, synthetic deflation | `root.pdf` |
+| `assign6_midtrap` | Composite Midpoint and Trapezoidal quadrature | `integ.pdf` |
+| `assign6b_simmc` | Simpson 1/3-rule, Monte Carlo variance $O(N^{-1/2})$ | `integ.pdf` |
+| `assign6c_gq` | Gauss-Legendre & Gauss-Laguerre quadrature ($N \le 6$) | `integ.pdf` |
+| `Midsem` | Comprehensive mid-semester examination suite | All slides 1–7 |
+| `assign7a_fwbk` | Forward/Backward Euler, Heun predictor-corrector | `diffeq.pdf` (Part I) |
+| `assign7b_rk4` | Runge-Kutta 4th Order, damped SHO, Rössler attractor | `diffeq.pdf` (Part I) |
+| `assign7c_sht` | Shooting method (beam, rod), 1D Finite Element Method | `diffeq.pdf` (Part I) |
+| `assign7d_felem` | Explicit FTCS heat equation, Crank-Nicolson PDE | `diffeq.pdf` (Part II) |
+| `assign8_eval` | Power iteration, Rayleigh quotient, matrix deflation | `eigv.pdf` |
+| `assign9a_fit` | Lagrange interpolation, weighted linear regression | `datafit.pdf` |
+| `assign9b_fit` | Polynomial fit, Hankel conditioning, shifted Chebyshev | `datafit.pdf` |
+
+---
+
+*End of master notes — covers all 10 slide decks + full assignment repo walkthrough.*
