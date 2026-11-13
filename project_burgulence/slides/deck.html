@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Shock waves in a one-dimensional fluid — DIY project</title>
+<!--
+  Self-contained deck: no network, no dependencies.
+  Arrow keys / space to navigate, "p" to print (then Save as PDF, landscape).
+  Figures are read from ../figures/.  Same content as slides.tex.
+-->
+<style>
+  :root{
+    --ink:#1b1b1b; --accent:#1f4e79; --accent2:#a8322d;
+    --faint:#6b6b6b; --rule:#dcdcdc; --bg:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#e9eaec;color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+  .deck{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+  .slide{
+    width:min(96vw,1280px); height:min(54vw,720px); background:var(--bg);
+    padding:4.2% 5.2% 3.4% 5.2%; position:relative; display:none;
+    box-shadow:0 10px 40px rgba(0,0,0,.16); overflow:hidden;
+  }
+  .slide.active{display:block}
+  h1{font-size:2.5em;line-height:1.15;margin:.1em 0 .2em;color:var(--accent)}
+  h2{font-size:1.55em;margin:0 0 .55em;color:var(--accent);font-weight:600}
+  h3{font-size:1.05em;margin:0 0 .4em;color:var(--accent2)}
+  p,li{font-size:1.02em;line-height:1.45}
+  li{margin:.28em 0}
+  .sub{color:var(--faint);font-size:1.05em;margin-bottom:1.6em}
+  .small{font-size:.86em;color:var(--faint)}
+  .hl{color:var(--accent2);font-weight:600}
+  .cols{display:flex;gap:3.2%;align-items:flex-start}
+  .col{flex:1}
+  img{width:100%;height:auto;display:block}
+  .cap{font-size:.74em;color:var(--faint);margin-top:.4em;line-height:1.3}
+  .eq{font-family:"Latin Modern Math",Cambria Math,Georgia,serif;font-size:1.5em;
+      text-align:center;margin:.7em 0;color:var(--ink)}
+  .box{border-left:3px solid var(--accent2);padding:.55em .9em;background:#faf7f7;
+      margin-top:1.1em;font-size:.95em}
+  table{border-collapse:collapse;font-size:.92em;margin:.4em 0}
+  th,td{padding:.24em .8em;border-bottom:1px solid var(--rule);text-align:left}
+  th{border-bottom:2px solid var(--ink);font-weight:600}
+  .foot{position:absolute;left:5.2%;right:5.2%;bottom:2.2%;display:flex;
+    justify-content:space-between;font-size:.72em;color:var(--faint);
+    border-top:1px solid var(--rule);padding-top:.5em}
+  .title-slide{display:flex;flex-direction:column;justify-content:center}
+  .kicker{color:var(--accent2);letter-spacing:.14em;text-transform:uppercase;
+    font-size:.8em;margin-bottom:1em}
+  @media print{
+    html,body{background:#fff}
+    .deck{display:block;height:auto}
+    .slide{display:block!important;page-break-after:always;box-shadow:none;
+      width:100%;height:auto;min-height:0;padding:6mm 8mm}
+    .foot{position:static;margin-top:14mm}
+  }
+</style>
+
+<div class="deck">
+
+  <!-- 1 -->
+  <section class="slide title-slide">
+    <div class="kicker">DIY project · PHY341/745</div>
+    <h1>Shock waves in a<br>one-dimensional fluid</h1>
+    <div class="sub">How much of what you see is the grid?</div>
+    <p style="margin-top:1.4em">Aryan Bandyopadhyay · 2411014<br>
+      <span class="small">Physics Computer Lab · NISER Bhubaneswar</span></p>
+    <div class="foot"><span>Burgers / 1-D Navier–Stokes</span><span>1 / 12</span></div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <h2>One equation</h2>
+    <div class="cols">
+      <div class="col">
+        <div class="eq">u<sub>t</sub> + u u<sub>x</sub> = ν u<sub>xx</sub></div>
+        <ul>
+          <li>nonlinearity <b>steepens</b> the wave</li>
+          <li>viscosity <b>smooths</b> it</li>
+          <li>the balance is a <span class="hl">shock</span></li>
+        </ul>
+        <p class="small">In one dimension, incompressibility forces u<sub>x</sub> = 0,
+          so advection and the pressure gradient both vanish. Dropping only the
+          pressure gradient leaves this — the <b>1-D Navier–Stokes</b> equation.</p>
+      </div>
+      <div class="col">
+        <img src="../figures/fig02_shock_formation.png" alt="shock">
+        <div class="cap">The whole talk in one picture: steepening, breaking at
+          t = 1, and the asymptotic profile.</div>
+      </div>
+    </div>
+    <div class="foot"><span>the equation</span><span>2 / 12</span></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <h2>The only theory needed</h2>
+    <div class="cols">
+      <div class="col">
+        <h3>When does it break?</h3>
+        <p>Characteristics x = ξ + u₀(ξ)t cross at</p>
+        <div class="eq">t<sub>s</sub> = −1 / min u₀′ = 1</div>
+        <h3 style="margin-top:1em">How thick is what remains?</h3>
+        <div class="eq">δ = 4ν/U,  u = −U tanh[U(x−x₀)/2ν]</div>
+      </div>
+      <div class="col">
+        <h3>Four predictions, no free parameters</h3>
+        <div class="eq">E(k) ∝ k<sup>−2</sup></div>
+        <div class="eq">ζ<sub>p</sub> = min(p, 1)</div>
+        <p class="small">Everything in this talk is measured against one of these.
+          That is what makes the <i>numerics</i> measurable rather than decorative.</p>
+      </div>
+    </div>
+    <div class="foot"><span>theory</span><span>3 / 12</span></div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide">
+    <h2>Five solvers, three diagnostics</h2>
+    <div class="cols">
+      <div class="col">
+        <table>
+          <tr><th>scheme</th><th>order</th></tr>
+          <tr><td>upwind</td><td>1</td></tr>
+          <tr><td>Lax–Wendroff</td><td>2</td></tr>
+          <tr><td>FTCS</td><td>2 (unstable)</td></tr>
+          <tr><td>Crank–Nicolson + Heun</td><td>2</td></tr>
+          <tr><td>spectral, Strang + RK4</td><td>exponential</td></tr>
+        </table>
+        <p class="small">All written for this project. NumPy only for arrays —
+          no <code>np.fft</code>, no <code>scipy</code>. The FFT is radix-2 and
+          checked against a naive DFT to 10<sup>−15</sup>.</p>
+      </div>
+      <div class="col">
+        <h3>Diagnostics</h3>
+        <ul>
+          <li>δ = jump / max slope</li>
+          <li>E(k) from the from-scratch FFT</li>
+          <li>S<sub>p</sub>(r), moments of increments</li>
+        </ul>
+        <h3 style="margin-top:.8em">Reference</h3>
+        <p>exact Cole–Hopf solution, grid-independent to 10<sup>−12</sup></p>
+      </div>
+    </div>
+    <div class="foot"><span>methods</span><span>4 / 12</span></div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <h2>Result 1 — are the solvers right?</h2>
+    <img src="../figures/fig01_validation.png" alt="validation" style="max-height:74%">
+    <div class="cap">measured orders <span class="hl">0.94, 2.02, 2.00</span>,
+      spectral 7.5×10<sup>−4</sup> → 10<sup>−9</sup>; growth rates match von
+      Neumann theory to 0.3%.</div>
+    <div class="foot"><span>verification</span><span>5 / 12</span></div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <h2>Result 2 — breaking, and what is left behind</h2>
+    <img src="../figures/fig03_shock_scaling.png" alt="scaling" style="max-height:70%">
+    <div class="cap">strain follows 1/(t<sub>s</sub>−t) to 0.5% and saturates at
+      <span class="hl">247.5 vs 250</span>; δ ∝ ν<sup>0.985</sup>, prefactor
+      5–10% above 4ν/U.</div>
+    <div class="foot"><span>breaking</span><span>6 / 12</span></div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide">
+    <h2>Result 3 — the spectrum has a movable end</h2>
+    <img src="../figures/fig04_spectra.png" alt="spectra" style="max-height:70%">
+    <div class="cap">E(k) ∝ k<sup>−2.030±0.001</sup> for every ν; the cut-off
+      k<sub>cut</sub> ∝ ν<sup>−0.971</sup>. Viscosity changes where the spectrum
+      <i>ends</i>, not its shape.</div>
+    <div class="foot"><span>Fourier analysis</span><span>7 / 12</span></div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide">
+    <h2>Result 4 — many shocks, one exponent</h2>
+    <img src="../figures/fig05_structure_functions.png" alt="structure functions" style="max-height:72%">
+    <div class="cap">ζ<sub>p</sub> = 0.52, 0.92, 1.00, 0.94, 0.92 versus
+      min(p,1) and p/3 — a factor of three apart at p = 4, with a 5% error bar.</div>
+    <div class="foot"><span>Burgulence</span><span>8 / 12</span></div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide">
+    <h2>Result 5 — how much of the viscosity is the grid?</h2>
+    <img src="../figures/fig06_grid_viscosity.png" alt="grid viscosity" style="max-height:70%">
+    <div class="cap">ν<sub>num</sub> = ½UΔx(1−C) verified to <span class="hl">1%</span>
+      over five decades; at N = 256 the grid is <span class="hl">3.7×</span> more
+      viscous than the fluid.</div>
+    <div class="foot"><span>the punchline</span><span>9 / 12</span></div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide">
+    <h2>What I take away</h2>
+    <ul>
+      <li>Convergence <i>order</i> does not predict shock <i>quality</i>: all four
+        schemes have known orders and disagree qualitatively — smeared vs ringed.</li>
+      <li>Integral quantities are robust, local ones are not: the k<sup>−2</sup>
+        slope survives a 10<sup>3</sup> change in ν; the shock thickness does not.</li>
+      <li>Numerical dissipation is measurable, has a formula, and should be
+        computed rather than hoped away.</li>
+    </ul>
+    <div class="box"><b>Practical criterion.</b> Resolve the shock, not the
+      wavelength: Δx ≲ 0.2 δ — at least five points per shock.</div>
+    <div class="foot"><span>conclusions</span><span>10 / 12</span></div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide">
+    <h2>Limitations, and what I would do next</h2>
+    <div class="cols">
+      <div class="col">
+        <h3>Limitations</h3>
+        <ul>
+          <li>inertial range only ≈1.5 decades</li>
+          <li>statistics taken at one time, not stationary</li>
+          <li>one equation; no vortex stretching (absent in 1-D)</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>Next</h3>
+        <ul>
+          <li>forced, statistically stationary run</li>
+          <li>WENO/TVD scheme, same ζ<sub>p</sub> test</li>
+          <li>extension to 2-D</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot"><span>outlook</span><span>11 / 12</span></div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide">
+    <h2>References &amp; code</h2>
+    <ol style="font-size:.92em">
+      <li>J. M. Burgers, Adv. Appl. Mech. <b>1</b>, 171 (1948).</li>
+      <li>J. Bec &amp; K. Khanin, Phys. Rep. <b>447</b>, 1 (2007).</li>
+      <li>G. B. Whitham, <i>Linear and Nonlinear Waves</i> (Wiley, 1974), ch. 2–4.</li>
+      <li>R. J. LeVeque, <i>Finite Volume Methods for Hyperbolic Problems</i> (CUP, 2002), ch. 4, 6.</li>
+      <li>J. P. Boyd, <i>Chebyshev and Fourier Spectral Methods</i> (Dover, 2001), ch. 2.</li>
+      <li>J. D. Cole, Quart. Appl. Math. <b>9</b>, 225 (1951).</li>
+    </ol>
+    <div class="box">Code, figures and every number:
+      <b>github.com/Aryans-lab/Computational_Physics_Lab</b> → <code>project_burgulence/</code></div>
+    <div class="foot"><span>thank you</span><span>12 / 12</span></div>
+  </section>
+
+</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  let i = 0;
+  function show(n){
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    location.hash = 's' + (i + 1);
+  }
+  addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)) { e.preventDefault(); show(i + 1); }
+    if (['ArrowLeft','ArrowUp','PageUp'].includes(e.key)) { e.preventDefault(); show(i - 1); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+    if (e.key === 'p') window.print();
+  });
+  addEventListener('click', e => show(e.clientX < innerWidth / 2 ? i - 1 : i + 1));
+  const start = parseInt(location.hash.replace('#s', '')) || 1;
+  show(start - 1);
+</script>

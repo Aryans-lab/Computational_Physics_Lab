@@ -1,0 +1,49 @@
+==============================================================================
+E1  Validation of the Burgers solvers   nu = 0.1,  T = 0.5,  u0 = sin x
+==============================================================================
+The reference is the exact Cole-Hopf solution, computed on a 8192-point
+quadrature grid with spectral interpolation of u0 (grid-independent to 1e-12).
+
+upwind ($N^{-1}$)          N=  16  steps=  2500  L2 error=5.188e-02
+upwind ($N^{-1}$)          N=  32  steps=  2500  L2 error=2.818e-02
+upwind ($N^{-1}$)          N=  64  steps=  2500  L2 error=1.473e-02
+upwind ($N^{-1}$)          N= 128  steps=  2500  L2 error=7.529e-03
+upwind ($N^{-1}$)          N= 256  steps=  2500  L2 error=3.802e-03
+                           fitted order: 0.94
+
+Lax-Wendroff ($N^{-2}$)    N=  16  steps=  2500  L2 error=1.810e-02
+Lax-Wendroff ($N^{-2}$)    N=  32  steps=  2500  L2 error=4.851e-03
+Lax-Wendroff ($N^{-2}$)    N=  64  steps=  2500  L2 error=1.228e-03
+Lax-Wendroff ($N^{-2}$)    N= 128  steps=  2500  L2 error=3.004e-04
+Lax-Wendroff ($N^{-2}$)    N= 256  steps=  2500  L2 error=6.709e-05
+                           fitted order: 2.02
+
+Crank-Nicolson ($N^{-2}$)  N=  16  steps=  2500  L2 error=4.886e-03
+Crank-Nicolson ($N^{-2}$)  N=  32  steps=  2500  L2 error=1.217e-03
+Crank-Nicolson ($N^{-2}$)  N=  64  steps=  2500  L2 error=3.028e-04
+Crank-Nicolson ($N^{-2}$)  N= 128  steps=  2500  L2 error=7.560e-05
+Crank-Nicolson ($N^{-2}$)  N= 256  steps=  2500  L2 error=1.889e-05
+                           fitted order: 2.00
+
+spectral (exponential)     N=  16  steps=  2500  L2 error=7.458e-04
+spectral (exponential)     N=  32  steps=  2500  L2 error=1.040e-05
+spectral (exponential)     N=  64  steps=  2500  L2 error=9.972e-10
+spectral (exponential)     N= 128  steps=  2500  L2 error=4.675e-10
+spectral (exponential)     N= 256  steps=  2500  L2 error=4.675e-10
+                           fitted order: 6.16
+
+Cost of the same problem at N = 256, T = 0.5 (nu = 0.1):
+  spectral, RK4 explicit   steps=  1639   wall= 1.80 s
+  spectral, Strang split   steps=    80   wall= 0.08 s
+  Crank-Nicolson           steps=    40   wall= 0.02 s
+  upwind                   steps=   185   wall= 0.01 s
+  An explicit treatment of diffusion needs dt < dx^2/(2 nu); Crank-Nicolson
+  has no such restriction, which is why it needs ~40x fewer steps here.
+
+
+FTCS diffusion stability limit at N=256: dt_crit = dx^2/(2 nu) = 3.012e-03
+  FTCS, $0.9\,\Delta t_{\rm crit}$ dt=2.71e-03  measured -82.1/time   von Neumann -82.3/time  (ratio 0.997)
+  FTCS, $1.1\,\Delta t_{\rm crit}$ dt=3.31e-03  measured +55.1/time   von Neumann +55.0/time  (ratio 1.001)
+  CN, $20\,\Delta t_{\rm crit}$ dt=6.02e-02  measured -1.7/time   von Neumann -1.7/time  (ratio 0.997)
+
+wrote figures/fig01_validation.{pdf,png}

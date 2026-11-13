@@ -1,0 +1,18 @@
+==============================================================================
+E3  Energy spectra of a shock train
+==============================================================================
+nu=0.0100  delta=0.0421  k_cut=1/delta=   23.8  inertial slope=-2.048+-0.000  tail decay length=0.0136  (4nu/U=0.0400)
+nu=0.0050  delta=0.0212  k_cut=1/delta=   47.2  inertial slope=-2.028+-0.001  tail decay length=0.0066  (4nu/U=0.0200)
+nu=0.0020  delta=0.0088  k_cut=1/delta=  113.6  inertial slope=-2.015+-0.000  tail decay length=0.0025  (4nu/U=0.0080)
+
+  k_cut ~ nu^-0.971  (prediction: k_cut = U/(4 nu), slope -1)
+  slope of the inertial range: -2.030 (prediction -2)
+
+Resolution study at nu = 0.002 (physical shock width 0.008):
+  N=  256  points per shock =  2.00   apparent slope (4<k<40) = -1.993   measured delta = 0.0491
+  N=  512  points per shock =  2.00   apparent slope (4<k<40) = -2.019   measured delta = 0.0245
+  N= 1024  points per shock =  2.00   apparent slope (4<k<40) = -2.017   measured delta = 0.0123
+  N= 2048  points per shock =  3.20   apparent slope (4<k<40) = -2.017   measured delta = 0.0098
+  N= 4096  points per shock =  5.74   apparent slope (4<k<40) = -2.016   measured delta = 0.0088
+
+wrote figures/fig04_spectra.{pdf,png}

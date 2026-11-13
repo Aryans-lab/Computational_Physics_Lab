@@ -1,0 +1,30 @@
+==============================================================================
+E5  Numerical viscosity: how much of the dissipation is the grid?
+==============================================================================
+
+Pure advection u_t + u_x = 0, u0 = sin x, one period, C = 0.4:
+  N      nu_num (measured)  (U dx/2)(1-C)   ratio
+     32   5.9591e-02    5.8905e-02    1.01
+     64   2.9654e-02    2.9452e-02    1.01
+    128   1.4740e-02    1.4726e-02    1.00
+    256   7.3691e-03    7.3631e-03    1.00
+    512   3.6840e-03    3.6816e-03    1.00
+   1024   1.8415e-03    1.8408e-03    1.00
+  fitted nu_num ~ dx^1.003   (theory: 1)
+
+Same grid (N=256), varying Courant number (upwind):
+  C=0.10   nu_num = 1.1045e-02   theory = 1.1045e-02   ratio 1.00
+  C=0.20   nu_num = 9.8199e-03   theory = 9.8175e-03   ratio 1.00
+  C=0.40   nu_num = 7.3691e-03   theory = 7.3631e-03   ratio 1.00
+  C=0.60   nu_num = 4.9181e-03   theory = 4.9087e-03   ratio 1.00
+  C=0.80   nu_num = 2.4670e-03   theory = 2.4544e-03   ratio 1.01
+
+Grid viscosity relative to a physical nu = 0.002:
+  N=  128  dx=4.9087e-02  nu_num=1.4726e-02  nu_num/nu =    7.4   points inside 4nu/U =   0.2
+  N=  256  dx=2.4544e-02  nu_num=7.3631e-03  nu_num/nu =    3.7   points inside 4nu/U =   0.3
+  N=  512  dx=1.2272e-02  nu_num=3.6816e-03  nu_num/nu =    1.8   points inside 4nu/U =   0.7
+  N= 1024  dx=6.1359e-03  nu_num=1.8408e-03  nu_num/nu =    0.9   points inside 4nu/U =   1.3
+  N= 2048  dx=3.0680e-03  nu_num=9.2039e-04  nu_num/nu =    0.5   points inside 4nu/U =   2.6
+  N= 4096  dx=1.5340e-03  nu_num=4.6019e-04  nu_num/nu =    0.2   points inside 4nu/U =   5.2
+
+wrote figures/fig06_grid_viscosity.{pdf,png}
