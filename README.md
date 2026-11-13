@@ -55,7 +55,17 @@ Cantilever beam deflection under load solved via the Shooting Method with RK4, a
   <img src="assign7d_felem/crank_nicolson_lines.png" alt="Crank-Nicolson PDE Evolution" width="700"/>
 </p>
 
-### 4. Data Fitting: Monomial vs. Shifted Chebyshev Orthogonal Basis
+### 4. DIY Project: Shock Waves in a 1-D Fluid (Viscous Burgers Equation)
+Five independent solvers (upwind, Lax–Wendroff, FTCS, Crank–Nicolson, Fourier spectral) for the 1-D Navier–Stokes equation, measured against the exact Cole–Hopf solution, the $k^{-2}$ energy spectrum of a shock train, and the bifractal structure-function exponents of Burgers turbulence. The project quantifies how much of a computed shock is physics and how much is the grid.
+
+<p align="center">
+  <img src="project_burgulence/figures/fig02_shock_formation.png" alt="Shock Formation" width="48%"/>
+  <img src="project_burgulence/figures/fig06_grid_viscosity.png" alt="Grid Viscosity" width="48%"/>
+</p>
+
+See [`project_burgulence/`](project_burgulence/) for the full study, the four-page report and the presentation.
+
+### 5. Data Fitting: Monomial vs. Shifted Chebyshev Orthogonal Basis
 Comparison of cubic polynomial regression using standard monomial basis ($x^k$, ill-conditioned Hankel matrix) versus shifted Chebyshev orthogonal polynomials ($\phi_m(x) = T_m(2x - 1)$ on $[0, 1]$), illustrating matrix conditioning and numerical stability.
 
 <p align="center">
@@ -128,6 +138,7 @@ mylib.py
 | [`assign8_eval/`](assign8_eval/) | Eigenvalue Problems | Power iteration method with Rayleigh quotient, outer-product deflation, validation on 5x5 tridiagonal spectrum |
 | [`assign9a_fit/`](assign9a_fit/) | Interpolation & Model Comparison | Lagrange polynomial interpolation with ascending power coefficients, power law vs. exponential fit via Pearson $r^2$ |
 | [`assign9b_fit/`](assign9b_fit/) | Polynomial & Chebyshev Regression | Standard polynomial least squares of order $k$, Hankel matrix condition numbers, modified Chebyshev basis fitting |
+| [`project_burgulence/`](project_burgulence/) | **DIY Project** — 1-D Navier–Stokes / Burgers equation | Five solvers verified against Cole–Hopf; shock formation, $k^{-2}$ spectra, bifractal exponents, numerical viscosity, with report and slides |
 | [`Slides/`](Slides/) | Lecture Notes & Slide Decks | Course reference slides provided by the instructor covering all topics |
 | [`helper/`](helper/) | Course Reference & Notes | Comprehensive master study notes ([`Computational_Physics_Complete_Notes.md`](helper/Computational_Physics_Complete_Notes.md)) and course templates |
 

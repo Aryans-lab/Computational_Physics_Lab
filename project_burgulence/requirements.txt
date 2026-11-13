@@ -1,0 +1,4 @@
+# Only array arithmetic and plotting. The numerics (FFT, linear solvers,
+# ODE integrators, spectral methods) are implemented in src/.
+numpy>=1.24
+matplotlib>=3.7

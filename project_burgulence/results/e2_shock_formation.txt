@@ -1,0 +1,21 @@
+==============================================================================
+E2  Shock formation from u0 = sin x
+==============================================================================
+spectral run: N=4096, nu=0.002, snapshots=221
+steps = 3540, dt = 1.91e-04, mass drift = 6.98e-16
+
+  t      max|u_x|     inviscid 1/(t_s-t)
+  0.20       1.249        1.250
+  0.50       1.993        2.000
+  0.80       4.819        5.000
+  0.95      13.652       20.000
+
+  viscous saturation, predicted U^2/(2 nu) = 250.0, measured 247.5
+  nu= 0.0200  N= 4096  delta=0.0839   4 nu/U=0.0800   ratio=1.05
+  nu= 0.0100  N= 4096  delta=0.0421   4 nu/U=0.0400   ratio=1.05
+  nu= 0.0050  N= 4096  delta=0.0212   4 nu/U=0.0200   ratio=1.06
+  nu= 0.0020  N= 4096  delta=0.0088   4 nu/U=0.0080   ratio=1.10
+  nu= 0.0015  N= 8192  delta=0.0065   4 nu/U=0.0060   ratio=1.08
+  fitted delta ~ nu^0.985   (exact: 1)
+
+wrote figures/fig02_shock_formation and fig03_shock_scaling
