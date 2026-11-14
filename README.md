@@ -63,7 +63,9 @@ Five independent solvers (upwind, Lax–Wendroff, FTCS, Crank–Nicolson, Fourie
   <img src="project_burgulence/figures/fig06_grid_viscosity.png" alt="Grid Viscosity" width="48%"/>
 </p>
 
-See [`project_burgulence/`](project_burgulence/) for the full study, the four-page report and the presentation.
+See [`project_burgulence/`](project_burgulence/) for the full study. The write-up is a
+four-page report ([`report/report.pdf`](project_burgulence/report/report.pdf)) and a
+12-slide deck ([`slides/slides.pdf`](project_burgulence/slides/slides.pdf)).
 
 ### 5. Data Fitting: Monomial vs. Shifted Chebyshev Orthogonal Basis
 Comparison of cubic polynomial regression using standard monomial basis ($x^k$, ill-conditioned Hankel matrix) versus shifted Chebyshev orthogonal polynomials ($\phi_m(x) = T_m(2x - 1)$ on $[0, 1]$), illustrating matrix conditioning and numerical stability.

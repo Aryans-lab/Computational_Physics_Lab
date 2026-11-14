@@ -126,8 +126,8 @@ project_burgulence/
 ├── experiments/         e1 … e5, one script per result
 ├── figures/             generated, never hand-edited
 ├── results/             console logs and CSV/JSON of every quoted number
-├── report/              LaTeX skeleton for the 4-page report + outline
-├── slides/              beamer deck and a self-contained HTML deck
+├── report/              report.pdf (4 pages) + Typst and LaTeX sources + outline
+├── slides/              slides.pdf (12 slides) + Typst source + HTML/beamer decks
 └── tests/               15 checks (FFT vs DFT, Cole–Hopf residual, conservation, …)
 ```
 
@@ -196,12 +196,18 @@ Full annotated bibliography with DOIs: [`LITERATURE.md`](LITERATURE.md) and
 
 ## Report and presentation
 
-* [`report/main.tex`](report/main.tex) — four-page LaTeX skeleton with the
+* [`report/report.pdf`](report/report.pdf) — **the four-page report**, typeset
+  from [`report/report.typ`](report/report.typ).
+* [`report/main.tex`](report/main.tex) — the same report as a LaTeX source, if
+  you prefer to compile it yourself.
   equations, figure placement and a results table already filled in.
 * [`report/OUTLINE.md`](report/OUTLINE.md) — what each paragraph should say, in
   order, with the numbers to quote.
-* [`slides/`](slides/) — a 17-slide beamer deck and a self-contained HTML deck
-  that runs in any browser and prints to PDF.
+* [`slides/slides.pdf`](slides/slides.pdf) — **the 12-slide deck** for the
+  15 + 5 minute talk, from [`slides/slides.typ`](slides/slides.typ). The same
+  content is also available as a self-contained HTML deck
+  ([`slides/deck.html`](slides/deck.html), opens in any browser, `p` to print)
+  and as beamer ([`slides/slides.tex`](slides/slides.tex)).
 
 ---
 
