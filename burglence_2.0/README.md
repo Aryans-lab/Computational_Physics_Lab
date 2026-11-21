@@ -95,7 +95,7 @@ not what its slope is.
 
 | file | lines | what it does |
 |---|---|---|
-| `burgers.py` | ~230 | grid, initial condition, the two solvers, the three measurements |
+| `burgers.py` | 257 | grid, initial condition, the two solvers, the measurements |
 | `experiments/e1_sanity.py` | ~150 | accuracy and stability |
 | `experiments/e2_shock.py` | ~180 | the four shock panels |
 | `experiments/e3_spectrum.py` | ~120 | the two spectral panels |
@@ -143,6 +143,8 @@ Outputs: `figures/fig01–03.{pdf,png}` and `results/e1–e3.json`.
 |---|---|
 | [`report/report.pdf`](report/report.pdf) | the four-page report |
 | [`slides/slides.pdf`](slides/slides.pdf) | the eight-slide deck |
+| [`EXPLAINER.md`](EXPLAINER.md) | **everything, in depth** — the story, the physics and numerics derived from scratch, the code line by line, the error analysis, thirty viva questions |
+| [`TALK_SCRIPT.md`](TALK_SCRIPT.md) | the 13-minute talk, word for word |
 | [`STUDY_GUIDE.md`](STUDY_GUIDE.md) | a six-hour plan to understand all of it, plus viva questions |
 | [`REFERENCES.md`](REFERENCES.md) | the three papers and exactly what was taken from each |
 

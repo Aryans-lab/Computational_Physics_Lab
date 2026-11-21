@@ -31,7 +31,7 @@ import numpy as np
 
 # mylib.py sits one directory above this project folder
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from mylib import myrand, poly_fit, thomas_algorithm   # noqa: E402
+from mylib import poly_fit, thomas_algorithm   # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -46,28 +46,6 @@ def make_grid(N):
 def initial_sine(x, amplitude=1.0):
     """The classic test: one smooth hump.  u0 = sin(x)."""
     return amplitude * np.sin(x)
-
-
-def initial_random(x, n_modes=8, amplitude=1.0, seed=2411014):
-    """
-    Random initial condition built from sines:
-
-        u0(x) = amplitude * sum_k a_k sin(k x)
-
-    Each sine already vanishes at x = 0 and x = 2 pi, so the boundary
-    conditions are respected.  The random numbers come from mylib.myrand, i.e.
-    from the generator written in the course, not from numpy.random.
-
-    This initial condition does not contain one shock but many, which is what
-    the spectrum experiment needs.
-    """
-    myrand(seed)                      # reseed the course LCG
-    u = np.zeros_like(x)
-    for k in range(2, 2 + n_modes):
-        a = (1.0 + myrand()) / k      # random amplitude, ~ 1/k
-        u += a * np.sin(k * x)
-    u *= amplitude / np.max(np.abs(u))
-    return u
 
 
 # ---------------------------------------------------------------------------
