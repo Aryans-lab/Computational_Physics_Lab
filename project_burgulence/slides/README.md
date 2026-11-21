@@ -1,20 +1,24 @@
 # Presentation (15 + 5 minutes)
 
-Two decks with identical content — use whichever suits you.
+**`slides.pdf`** — 12 slides, 16:9, ready to show. This is the file to use.
 
-| File | How to use |
+| File | What it is |
 |---|---|
-| `deck.html` | Open in any browser. Arrow keys / space to navigate, `p` to print (then “Save as PDF”, landscape, no margins). No installation, no network. |
-| `slides.tex` | `pdflatex slides.tex` (twice). Beamer, 16:9, figures pulled from `../figures/`. |
+| `slides.pdf` | the deck, compiled |
+| `slides.typ` | its source (Typst) — edit and recompile with `typst compile slides.typ` |
+| `deck.html` | same content as a self-contained browser deck: arrow keys / space to navigate, `p` to print |
+| `slides.tex` | same content as beamer, if you prefer LaTeX |
 
-Twelve frames for fifteen minutes is deliberate: roughly one minute per frame
-plus three minutes on the grid-viscosity result.
+The `.typ` sources use the STIX Two fonts by name; without them Typst falls back
+to its default font and the layout shifts slightly. To get an identical PDF,
+pass the fonts explicitly: `typst compile --font-path /path/to/stix slides.typ`.
 
-Suggested timing:
+Twelve frames for fifteen minutes is deliberate: about one minute per frame,
+with three minutes on the grid-viscosity result.
 
-| Frames | Minutes | Content |
+| Slides | Minutes | Content |
 |---|---|---|
-| 1–3 | 2 | what the equation is, and the two formulas everything is tested against |
+| 1–3 | 2 | the equation, and the four formulas everything is tested against |
 | 4 | 1 | methods in one slide |
 | 5 | 3 | verification: orders, stability, cost |
 | 6–8 | 5 | breaking, spectra, Burgulence |

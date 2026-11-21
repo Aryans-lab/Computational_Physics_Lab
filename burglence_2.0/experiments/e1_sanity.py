@@ -1,0 +1,157 @@
+"""
+Experiment 1 -- is the code right?
+
+Three checks, none of which needs a clever argument:
+
+(a) Turn the nonlinear term off.  Then Burgers becomes the heat equation,
+    u_t = nu u_xx, which has the exact solution u = exp(-nu t) sin(x).
+    The diffusion step of our solver is the Crank-Nicolson routine from
+    mylib.py, so this checks the library and our use of it at once.
+
+(b) Put the nonlinear term back.  Before the wave breaks (t < 1) the solution
+    is smooth, so the error should shrink like a power of dx.  We do not have
+    an exact solution there, so we compare each run with a very fine one
+    (N = 4096) and measure the slope of error against N.
+
+(c) Push the time step past the stability limit and watch the scheme die.
+    The limit for the explicit scheme is dt < dx^2/(2 nu).
+
+Run from the project root:   python experiments/e1_sanity.py
+"""
+
+import json
+import math
+import os
+import sys
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, ".."))
+sys.path.insert(0, HERE)
+
+import burgers as b                       # noqa: E402
+import plotstyle as ps                    # noqa: E402
+from mylib import pde_heat_1d_crank_nicolson   # noqa: E402
+
+ps.setup()
+results = {}
+
+# ---------------------------------------------------------------------------
+# (a) pure diffusion -- library routine against the exact solution
+# ---------------------------------------------------------------------------
+nu = 0.01
+T = 1.0
+N = 64
+
+# u_t = nu u_xx  is the heat equation in the rescaled time  tau = nu * t,
+# so we ask mylib for tau in [0, nu*T] and read off the final profile.
+x_heat, snaps = pde_heat_1d_crank_nicolson(
+    2.0 * math.pi, nu * T, N, 400, lambda x: math.sin(x), 0.0, 0.0,
+    save_steps=[400])
+u_num = np.array(snaps[400])
+u_exact = math.exp(-nu * T) * np.sin(x_heat)
+err_diff = float(np.max(np.abs(u_num - u_exact)))
+results["diffusion_max_error"] = err_diff
+
+# ---------------------------------------------------------------------------
+# (b) convergence of the full equation before breaking
+# ---------------------------------------------------------------------------
+T_conv = 0.5
+nu_conv = 0.01
+x_ref, dx_ref = b.make_grid(4096)
+dt_ref = b.stable_dt("cn", b.initial_sine(x_ref), dx_ref, nu_conv) / 4.0
+ref = b.solve("cn", N=4096, nu=nu_conv, T=T_conv, save_times=[T_conv], dt=dt_ref)
+u_ref = ref["u"][-1]
+
+Ns = [64, 128, 256, 512]
+errors = []
+for Nc in Ns:
+    r = b.solve("cn", N=Nc, nu=nu_conv, T=T_conv, save_times=[T_conv])
+    # the coarse grid points are a subset of the fine ones (N divides 4096)
+    u_ref_on_coarse = u_ref[::4096 // Nc]
+    errors.append(b.l2_difference(r["u"][-1], u_ref_on_coarse))
+
+orders = [math.log(errors[i] / errors[i + 1]) / math.log(2.0)
+          for i in range(len(errors) - 1)]
+results["convergence"] = {"N": Ns, "error": errors, "order": orders}
+
+# ---------------------------------------------------------------------------
+# (c) stability -- step just below and just above dt = dx^2/(2 nu)
+# ---------------------------------------------------------------------------
+N_stab = 512
+nu_stab = 0.01
+x_s, dx_s = b.make_grid(N_stab)
+dt_limit = dx_s ** 2 / (2.0 * nu_stab)
+n_steps = 400
+
+histories = {}
+for factor in (0.9, 1.1):
+    u = b.initial_sine(x_s)
+    dt = factor * dt_limit
+    track = [float(np.max(np.abs(u)))]
+    for _ in range(n_steps):
+        u = b.step_explicit(u, dx_s, dt, nu_stab)
+        track.append(float(np.max(np.abs(u))) if np.all(np.isfinite(u)) else np.nan)
+    histories[factor] = np.array(track)
+    print(f"  dt = {factor} dt_limit : final max|u| = {track[-1]:.3e}")
+
+results["stability"] = {"dt_limit": dt_limit,
+                        "final_0.9": float(np.nanmax(histories[0.9][-1:])),
+                        "final_1.1": float(np.nanmax(histories[1.1][-1:]))}
+
+# ---------------------------------------------------------------------------
+# figure
+# ---------------------------------------------------------------------------
+fig, axes = plt.subplots(1, 3, figsize=(10.0, 2.9))
+
+ax = axes[0]
+ax.plot(x_heat, u_exact, color=ps.COL["blue"], lw=2.4, label="exact")
+ax.plot(x_heat[::2], u_num[::2], "o", ms=3.2, color=ps.COL["red"],
+        label="Crank–Nicolson (mylib)")
+ax.set_xlabel(r"$x$")
+ax.set_ylabel(r"$u$")
+ax.set_title(r"(a) diffusion only, $\nu = 0.01$, $t = 1$", fontsize=9)
+ax.legend(loc="lower left")
+ax.text(0.03, 0.93, f"max error = {err_diff:.1e}", transform=ax.transAxes,
+        fontsize=7.5, va="top")
+
+ax = axes[1]
+ax.loglog(Ns, errors, "o-", color=ps.COL["blue"], label="measured")
+guide = errors[0] * (np.array(Ns) / Ns[0]) ** -2.0
+ax.loglog(Ns, guide, "--", color=ps.COL["grey"], lw=1.0,
+          label=r"slope $-2$")
+ax.set_xlabel(r"$N$")
+ax.set_xticks(Ns)
+ax.set_xticklabels([str(n) for n in Ns])
+ax.minorticks_off()
+ax.set_ylabel(r"rms error at $t = 0.5$")
+ax.set_title("(b) convergence before breaking", fontsize=9)
+ax.legend()
+ax.text(0.04, 0.10, f"orders: " + ", ".join(f"{o:.2f}" for o in orders),
+        transform=ax.transAxes, fontsize=7.5)
+
+ax = axes[2]
+for factor, colour in ((0.9, ps.COL["green"]), (1.1, ps.COL["red"])):
+    hist = histories[factor]
+    ax.semilogy(hist, color=colour, lw=1.2,
+                label=rf"$dt = {factor}\,\Delta t_{{\rm limit}}$")
+ax.set_xlabel("time step number")
+ax.set_ylabel(r"$\max|u|$")
+ax.set_title(r"(c) explicit scheme near $dt = dx^2/2\nu$", fontsize=9)
+ax.set_ylim(1e-6, 1e6)
+ax.legend(loc="center left")
+
+fig.tight_layout()
+ps.save(fig, "fig01_sanity")
+
+os.makedirs(ps.RESDIR, exist_ok=True)
+with open(os.path.join(ps.RESDIR, "e1_sanity.json"), "w") as f:
+    json.dump(results, f, indent=2)
+
+print("\n  diffusion error      :", f"{err_diff:.2e}")
+print("  convergence orders   :", ", ".join(f"{o:.2f}" for o in orders))
+print("  dt limit (N=512)     :", f"{dt_limit:.4e}")
+print("  max|u| at 0.9 limit  :", f"{results['stability']['final_0.9']:.3f}")
+print("  max|u| at 1.1 limit  :", f"{results['stability']['final_1.1']:.3e}")

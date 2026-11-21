@@ -1,0 +1,4 @@
+numpy>=1.24
+matplotlib>=3.7
+
+# the numerical routines themselves come from ../mylib.py (course library)
