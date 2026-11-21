@@ -1,5 +1,9 @@
 # Six hours to understand this project
 
+> For the full derivation of everything — physics, numerics, code, error
+> analysis and thirty viva questions — read [`EXPLAINER.md`](EXPLAINER.md).
+> This file is the timetable for that document.
+
 You do not need to know any of this before you start. Everything below is
 either first-year calculus or something you have already coded in this course.
 
