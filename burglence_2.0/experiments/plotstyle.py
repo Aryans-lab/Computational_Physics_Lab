@@ -1,4 +1,4 @@
-"""Shared plotting style.  Imported by the three experiment scripts."""
+# Shared matplotlib style and PNG saver
 
 import os
 
@@ -35,6 +35,6 @@ def setup():
 
 
 def save(fig, name):
-    fig.savefig(os.path.join(FIGDIR, name + ".pdf"), bbox_inches="tight")
+    os.makedirs(FIGDIR, exist_ok=True)
     fig.savefig(os.path.join(FIGDIR, name + ".png"), dpi=220, bbox_inches="tight")
-    print("wrote figures/" + name)
+    print("wrote figures/" + name + ".png")
